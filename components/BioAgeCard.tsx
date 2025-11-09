@@ -66,21 +66,26 @@ export function BioAgeCard({ tests, chronologicalAge, userGender }: BioAgeCardPr
     );
   }
 
-  const deltaColor = getBioAgeColor(bioAgeData.delta);
+  // Use soft monotone colors instead of bright colors
+  const deltaColor = bioAgeData.delta >= 5 ? '#7FB5A5' :  // Soft green
+                     bioAgeData.delta >= 2 ? '#8E9FBC' :   // Soft blue
+                     bioAgeData.delta >= -2 ? '#D4A574' :  // Soft amber
+                     bioAgeData.delta >= -5 ? '#C4A6A6' :  // Soft rose
+                     '#D88B8B';  // Soft red
   const message = getBioAgeMessage(bioAgeData.delta);
 
   return (
     <>
       <TouchableOpacity 
-        style={[styles.card, { borderColor: deltaColor }]} 
+        style={styles.card}
         onPress={handleViewBreakdown}
         activeOpacity={0.7}
       >
         <View style={styles.header}>
           <Text style={styles.label}>Your BioAge</Text>
           <View style={[styles.confidenceBadge, {
-            backgroundColor: bioAgeData.confidence === 'high' ? '#10B981' : 
-                            bioAgeData.confidence === 'medium' ? '#F59E0B' : '#EF4444'
+            backgroundColor: bioAgeData.confidence === 'high' ? '#E8F4F0' : 
+                            bioAgeData.confidence === 'medium' ? '#FFF4E6' : '#FDEAEA'
           }]}>
             <Text style={styles.confidenceText}>
               {bioAgeData.confidence === 'high' ? 'High ✅' :
@@ -90,7 +95,7 @@ export function BioAgeCard({ tests, chronologicalAge, userGender }: BioAgeCardPr
         </View>
 
         <View style={styles.ageDisplay}>
-          <Text style={[styles.bioAge, { color: deltaColor }]}>
+          <Text style={styles.bioAge}>
             {bioAgeData.biological_age}
           </Text>
           <Text style={styles.yearsLabel}>years old</Text>
@@ -213,16 +218,17 @@ export function BioAgeCard({ tests, chronologicalAge, userGender }: BioAgeCardPr
 
 const styles = StyleSheet.create({
   card: {
-    padding: 24,
-    borderRadius: 20,
-    backgroundColor: '#fff',
-    borderWidth: 3,
+    padding: 32,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E8E9EC',
     marginBottom: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 1,
   },
   lockedContainer: {
     alignItems: 'center',
@@ -234,13 +240,14 @@ const styles = StyleSheet.create({
   },
   lockedTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '500',  // Medium weight
     marginBottom: 8,
-    color: '#000',
+    color: '#1F2937',
   },
   lockedSubtitle: {
     fontSize: 14,
-    color: '#666',
+    fontWeight: '300',  // Light weight
+    color: '#6B7280',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -267,9 +274,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '600',
+    fontSize: 13,
+    color: '#9B9DA2',
+    fontWeight: '300',  // Light weight
+    letterSpacing: 0.5,
   },
   confidenceBadge: {
     paddingHorizontal: 12,
@@ -278,20 +286,22 @@ const styles = StyleSheet.create({
   },
   confidenceText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: '400',  // Regular weight
+    color: '#374151',  // Darker for soft backgrounds
   },
   ageDisplay: {
     alignItems: 'center',
     marginBottom: 16,
   },
   bioAge: {
-    fontSize: 64,
-    fontWeight: 'bold',
+    fontSize: 56,  // Slightly smaller
+    fontWeight: '200',  // Very thin like Oura
+    color: '#9B8DC7',  // Soft purple
   },
   yearsLabel: {
-    fontSize: 18,
-    color: '#666',
+    fontSize: 15,
+    fontWeight: '300',  // Light weight
+    color: '#6B7280',
     marginTop: 4,
   },
   comparison: {

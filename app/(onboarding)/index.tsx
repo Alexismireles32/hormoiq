@@ -59,15 +59,18 @@ export default function OnboardingScreen() {
 
     try {
       // Create or update user profile
-      const { error } = await supabase.from('users').upsert({
-        id: user.id,
-        email: user.email,
-        age: age,
-        gender: biologicalSex,
-        on_hormone_therapy: onHormoneTherapy === 'yes',
-        hormone_therapy_unknown: onHormoneTherapy === 'not_sure',
-        onboarding_completed: true,
-      });
+      const { error } = await supabase.from('users').upsert(
+        {
+          id: user.id,
+          email: user.email,
+          age: age,
+          gender: biologicalSex,
+          on_hormone_therapy: onHormoneTherapy === 'yes',
+          hormone_therapy_unknown: onHormoneTherapy === 'not_sure',
+          onboarding_completed: true,
+        },
+        { onConflict: 'id' } // Update if user already exists
+      );
 
       if (error) throw error;
 
@@ -102,15 +105,18 @@ export default function OnboardingScreen() {
             setLoading(true);
             try {
               // Set minimal defaults for anonymous users
-              const { error } = await supabase.from('users').upsert({
-                id: user.id,
-                email: user.email,
-                age: 30, // Default
-                gender: 'male', // Default
-                on_hormone_therapy: false,
-                hormone_therapy_unknown: false,
-                onboarding_completed: true,
-              });
+              const { error } = await supabase.from('users').upsert(
+                {
+                  id: user.id,
+                  email: user.email,
+                  age: 30, // Default
+                  gender: 'male', // Default
+                  on_hormone_therapy: false,
+                  hormone_therapy_unknown: false,
+                  onboarding_completed: true,
+                },
+                { onConflict: 'id' } // Update if user already exists
+              );
 
               if (error) throw error;
               router.replace('/(tabs)');

@@ -9,73 +9,81 @@ export const DesignSystem = {
   // COLOR PALETTE - Modern & Accessible
   // ============================================
   colors: {
-    // Primary Brand - Modern Indigo
+    // Primary Brand - Soft Lavender (Oura-inspired)
     primary: {
-      50: '#EEF2FF',
-      100: '#E0E7FF',
-      200: '#C7D2FE',
-      300: '#A5B4FC',
-      400: '#818CF8',
-      500: '#6366F1',  // Main brand color
-      600: '#4F46E5',
-      700: '#4338CA',
-      800: '#3730A3',
-      900: '#312E81',
-      950: '#1E1B4B',
+      50: '#F5F3F9',
+      100: '#EBE7F3',
+      200: '#D7CFE7',
+      300: '#C3B7DB',
+      400: '#AF9FCF',
+      500: '#9B8DC7',  // Main brand color - soft lavender
+      600: '#8A7BB8',
+      700: '#786BA3',
+      800: '#655A8A',
+      900: '#524871',
+      950: '#3F3658',
     },
     
-    // Neutrals - Modern gray scale with depth
+    // Neutrals - Soft gray scale with warmth (Oura-inspired)
     neutral: {
       0: '#FFFFFF',
-      50: '#F9FAFB',
-      100: '#F3F4F6',
-      200: '#E5E7EB',
-      300: '#D1D5DB',
-      400: '#9CA3AF',
-      500: '#6B7280',
-      600: '#4B5563',
-      700: '#374151',
-      800: '#1F2937',
-      900: '#111827',
-      950: '#030712',
+      50: '#F9FAFB',     // Off-white/cream - main background
+      100: '#F5F6F8',
+      200: '#EDEEF1',
+      300: '#E8E9EC',    // Card borders
+      400: '#C8CACD',
+      500: '#9B9DA2',
+      600: '#6B7280',
+      700: '#4B5563',
+      800: '#374151',
+      900: '#1F2937',
+      950: '#111827',
     },
     
-    // Semantic Colors - Status & Feedback
+    // Semantic Colors - Soft Monotone (Oura-inspired)
     success: {
-      light: '#D1FAE5',
-      DEFAULT: '#10B981',
-      dark: '#059669',
+      light: '#E8F4F0',
+      DEFAULT: '#7FB5A5',
+      dark: '#6BA393',
     },
     warning: {
-      light: '#FEF3C7',
-      DEFAULT: '#F59E0B',
-      dark: '#D97706',
+      light: '#FFF4E6',
+      DEFAULT: '#D4A574',
+      dark: '#BF9463',
     },
     error: {
-      light: '#FEE2E2',
-      DEFAULT: '#EF4444',
-      dark: '#DC2626',
+      light: '#FDEAEA',
+      DEFAULT: '#D88B8B',
+      dark: '#C67878',
     },
     info: {
-      light: '#DBEAFE',
-      DEFAULT: '#3B82F6',
-      dark: '#2563EB',
+      light: '#E9EEF7',
+      DEFAULT: '#8E9FBC',
+      dark: '#7A8CAA',
     },
     
-    // Hormone-specific Colors
+    // Hormone-specific Colors - Soft Pastels
     hormones: {
-      cortisol: '#3B82F6',      // Blue
-      testosterone: '#EF4444',   // Red
-      dhea: '#F97316',          // Orange
+      cortisol: '#8E9FBC',      // Soft blue-gray
+      testosterone: '#C4A6A6',   // Soft rose
+      dhea: '#D4A574',          // Soft amber
     },
     
-    // Gradient Sets
+    // Solid Colors (No Gradients - Oura style)
     gradients: {
-      primary: ['#6366F1', '#8B5CF6'],
-      success: ['#10B981', '#059669'],
-      sunset: ['#F59E0B', '#EF4444'],
-      ocean: ['#3B82F6', '#6366F1'],
-      rainbow: ['#6366F1', '#8B5CF6', '#EC4899'],
+      primary: ['#9B8DC7', '#9B8DC7'],
+      success: ['#7FB5A5', '#7FB5A5'],
+      sunset: ['#D4A574', '#D4A574'],
+      ocean: ['#8E9FBC', '#8E9FBC'],
+      rainbow: ['#9B8DC7', '#9B8DC7'],
+    },
+    
+    // Oura-specific Design Tokens
+    oura: {
+      cardBackground: '#FFFFFF',
+      cardBorder: '#E8E9EC',
+      subtleBackground: '#F5F6F8',
+      divider: '#EDEEF1',
     },
   },
   
@@ -121,8 +129,9 @@ export const DesignSystem = {
       '6xl': 60,
     },
     
-    // Font Weights
+    // Font Weights - Light & Elegant (Oura-inspired)
     fontWeight: {
+      light: '300' as any,
       regular: '400' as any,
       medium: '500' as any,
       semibold: '600' as any,
@@ -185,7 +194,7 @@ export const DesignSystem = {
   },
   
   // ============================================
-  // SHADOWS - Elevation System
+  // SHADOWS - Subtle Elevation (Oura-inspired)
   // ============================================
   shadows: {
     none: {
@@ -197,44 +206,44 @@ export const DesignSystem = {
     },
     sm: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.03,
+      shadowRadius: 8,
       elevation: 1,
     },
     DEFAULT: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.04,
+      shadowRadius: 12,
       elevation: 2,
     },
     md: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.05,
+      shadowRadius: 16,
       elevation: 3,
     },
     lg: {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.12,
-      shadowRadius: 12,
+      shadowOpacity: 0.06,
+      shadowRadius: 20,
       elevation: 4,
     },
     xl: {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.15,
-      shadowRadius: 16,
+      shadowOpacity: 0.08,
+      shadowRadius: 24,
       elevation: 5,
     },
     '2xl': {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 20 },
-      shadowOpacity: 0.2,
-      shadowRadius: 24,
+      shadowOffset: { width: 0, height: 16 },
+      shadowOpacity: 0.1,
+      shadowRadius: 32,
       elevation: 6,
     },
   },

@@ -35,11 +35,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      // PGRST116 = no rows found (user doesn't exist yet, e.g., during onboarding)
+      // This is expected and not an error - just means user isn't admin
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking admin status:', error);
+      }
 
       setIsAdmin(data?.is_admin || false);
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      // Silently handle - user likely doesn't exist yet (onboarding)
       setIsAdmin(false);
     } finally {
       setLoading(false);

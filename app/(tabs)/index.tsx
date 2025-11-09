@@ -13,12 +13,12 @@ import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { ReadyCard } from '@/components/ReadyCard';
 import { BioAgeCard } from '@/components/BioAgeCard';
+import { SwipeableScoreCards } from '@/components/SwipeableScoreCards';
 import { FeatureExplainer, FeatureType } from '@/components/FeatureExplainer';
 import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
 import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
-import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
@@ -30,36 +30,31 @@ const HORMONES = [
 
 const FEATURES = [
   {
-    id: 'track',
-    name: 'Test History',
-    description: 'View all your hormone tests',
-    icon: '📊',
-    color: DesignSystem.colors.info.DEFAULT,
-    route: '/track' as const,
-  },
-  {
     id: 'impact',
     name: 'IMPACT™',
     description: 'See what works for you',
     icon: '🎯',
-    color: DesignSystem.colors.success.DEFAULT,
+    backgroundColor: DesignSystem.colors.success.light,  // Soft green
     route: '/impact' as const,
+    type: 'impact' as FeatureType,
   },
   {
     id: 'protocols',
     name: 'Protocols',
     description: 'Optimization plans',
     icon: '📋',
-    color: DesignSystem.colors.warning.DEFAULT,
+    backgroundColor: DesignSystem.colors.warning.light,  // Soft amber
     route: '/protocols' as const,
+    type: 'protocols' as FeatureType,
   },
   {
     id: 'ask',
     name: 'ASK™',
     description: 'AI Hormone Coach',
     icon: '🤖',
-    color: DesignSystem.colors.primary[500],
+    backgroundColor: DesignSystem.colors.primary[100],  // Soft purple
     route: '/ask' as const,
+    type: 'ask' as FeatureType,
   },
 ];
 
@@ -176,19 +171,68 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </RNView>
 
-        {/* READYSCORE™ Card */}
-        <RNView style={styles.section}>
-          <RNView style={styles.sectionHeader}>
-            <Text style={styles.featureName}>READYSCORE™</Text>
+        {/* Swipeable Score Cards - Oura Style */}
+        <SwipeableScoreCards>
+          {/* READYSCORE™ Card */}
+          <RNView>
+            <RNView style={styles.sectionHeader}>
+              <Text style={styles.featureName}>READYSCORE™</Text>
+              <TouchableOpacity
+                style={styles.infoButton}
+                onPress={() => handleShowExplainer('readyscore')}
+              >
+                <Text style={styles.infoIcon}>ℹ️</Text>
+              </TouchableOpacity>
+            </RNView>
+            <ReadyCard tests={tests} userGender={userGender} />
+          </RNView>
+
+          {/* BIOAGE™ Card */}
+          <RNView>
+            <RNView style={styles.sectionHeader}>
+              <Text style={styles.featureName}>BIOAGE™</Text>
+              <TouchableOpacity
+                style={styles.infoButton}
+                onPress={() => handleShowExplainer('bioage')}
+              >
+                <Text style={styles.infoIcon}>ℹ️</Text>
+              </TouchableOpacity>
+            </RNView>
+            <BioAgeCard
+              tests={tests}
+              chronologicalAge={userAge}
+              userGender={userGender}
+            />
+          </RNView>
+
+          {/* IMPACT™ Card - Summary */}
+          <RNView>
+            <RNView style={styles.sectionHeader}>
+              <Text style={styles.featureName}>IMPACT™</Text>
+              <TouchableOpacity
+                style={styles.infoButton}
+                onPress={() => handleShowExplainer('impact')}
+              >
+                <Text style={styles.infoIcon}>ℹ️</Text>
+              </TouchableOpacity>
+            </RNView>
             <TouchableOpacity
-              style={styles.infoButton}
-              onPress={() => handleShowExplainer('readyscore')}
+              style={styles.impactCard}
+              onPress={() => handleFeaturePress('/impact')}
+              activeOpacity={0.7}
             >
-              <Text style={styles.infoIcon}>ℹ️</Text>
+              <Text style={styles.impactIcon}>🎯</Text>
+              <Text style={styles.impactTitle}>What Works For You</Text>
+              <Text style={styles.impactDescription}>
+                Track interventions and see what actually moves the needle on your hormones
+              </Text>
+              <RNView style={styles.impactCTA}>
+                <Text style={styles.impactCTAText}>View Insights</Text>
+                <Text style={styles.impactArrow}>→</Text>
+              </RNView>
             </TouchableOpacity>
           </RNView>
-          <ReadyCard tests={tests} userGender={userGender} />
-        </RNView>
+        </SwipeableScoreCards>
 
         {/* Quick TEST™ Actions */}
         <RNView style={styles.section}>
@@ -206,13 +250,11 @@ export default function DashboardScreen() {
             {HORMONES.map((hormone) => (
               <TouchableOpacity
                 key={hormone.type}
-                style={[
-                  styles.quickActionButton,
-                  { borderColor: hormone.color }
-                ]}
+                style={styles.quickActionButton}
                 onPress={() => handleHormoneSelect(hormone.type)}
                 activeOpacity={0.7}
               >
+                <RNView style={[styles.hormoneDot, { backgroundColor: hormone.color }]} />
                 <Text style={styles.quickActionIcon}>{hormone.icon}</Text>
                 <Text style={styles.quickActionText}>{hormone.name}</Text>
               </TouchableOpacity>
@@ -220,25 +262,7 @@ export default function DashboardScreen() {
           </RNView>
         </RNView>
 
-        {/* BIOAGE™ Card */}
-        <RNView style={styles.section}>
-          <RNView style={styles.sectionHeader}>
-            <Text style={styles.featureName}>BIOAGE™</Text>
-            <TouchableOpacity
-              style={styles.infoButton}
-              onPress={() => handleShowExplainer('bioage')}
-            >
-              <Text style={styles.infoIcon}>ℹ️</Text>
-            </TouchableOpacity>
-          </RNView>
-          <BioAgeCard
-            tests={tests}
-            chronologicalAge={userAge}
-            userGender={userGender}
-          />
-        </RNView>
-
-        {/* Feature Grid */}
+        {/* Feature Grid - Oura Style with Pastel Backgrounds */}
         <RNView style={styles.section}>
           <Text style={styles.sectionTitle}>Explore Features</Text>
           <RNView style={styles.featureGrid}>
@@ -249,13 +273,17 @@ export default function DashboardScreen() {
                 onPress={() => handleFeaturePress(feature.route)}
                 activeOpacity={0.8}
               >
-                <LinearGradient
-                  colors={[feature.color, feature.color + '00']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.featureGradient}
-                />
-                <Text style={styles.featureIcon}>{feature.icon}</Text>
+                <RNView style={styles.featureCardHeader}>
+                  <RNView style={[styles.iconCircle, { backgroundColor: feature.backgroundColor }]}>
+                    <Text style={styles.featureIcon}>{feature.icon}</Text>
+                  </RNView>
+                  <TouchableOpacity
+                    style={styles.featureInfoButton}
+                    onPress={() => handleShowExplainer(feature.type)}
+                  >
+                    <Text style={styles.featureInfoIcon}>ℹ️</Text>
+                  </TouchableOpacity>
+                </RNView>
                 <Text style={styles.featureCardName}>{feature.name}</Text>
                 <Text style={styles.featureCardDescription}>{feature.description}</Text>
               </TouchableOpacity>
@@ -303,21 +331,14 @@ export default function DashboardScreen() {
         <RNView style={{ height: DesignSystem.spacing[20] }} />
       </ScrollView>
 
-      {/* Floating TEST™ Button */}
+      {/* Floating TEST™ Button - Oura Style (Solid Color) */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => router.push('/test/input')}
         activeOpacity={0.9}
       >
-        <LinearGradient
-          colors={DesignSystem.colors.gradients.primary as any}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.fabGradient}
-        >
-          <Text style={styles.fabIcon}>🧪</Text>
-          <Text style={styles.fabText}>TEST™</Text>
-        </LinearGradient>
+        <Text style={styles.fabIcon}>🧪</Text>
+        <Text style={styles.fabText}>TEST™</Text>
       </TouchableOpacity>
 
       {/* Feature Explainer Modal */}
@@ -333,7 +354,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.neutral[50],
+    backgroundColor: DesignSystem.colors.neutral[50],  // Off-white cream
   },
   centered: {
     justifyContent: 'center',
@@ -354,24 +375,26 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: DesignSystem.typography.fontSize.base,
-    color: DesignSystem.colors.neutral[600],
-    fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.neutral[500],
+    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
     marginBottom: DesignSystem.spacing[1],
   },
   appName: {
-    fontSize: DesignSystem.typography.fontSize['4xl'],
-    fontWeight: DesignSystem.typography.fontWeight.extrabold,
+    fontSize: DesignSystem.typography.fontSize['3xl'],
+    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight Oura style
     color: DesignSystem.colors.neutral[900],
-    letterSpacing: DesignSystem.typography.letterSpacing.tight,
+    letterSpacing: 1,
   },
   profileButton: {
     width: 48,
     height: 48,
     borderRadius: DesignSystem.radius.full,
-    backgroundColor: DesignSystem.colors.neutral[0],
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
-    ...DesignSystem.shadows.DEFAULT,
+    ...DesignSystem.shadows.sm,
   },
   profileIcon: {
     fontSize: 24,
@@ -383,35 +406,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: DesignSystem.spacing[2],
+    marginBottom: DesignSystem.spacing[3],
   },
   featureName: {
     fontSize: DesignSystem.typography.fontSize.xs,
-    fontWeight: DesignSystem.typography.fontWeight.bold,
-    color: DesignSystem.colors.primary[600],
-    letterSpacing: DesignSystem.typography.letterSpacing.wider,
+    fontWeight: DesignSystem.typography.fontWeight.regular,  // Lighter
+    color: DesignSystem.colors.neutral[500],
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
   infoButton: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     borderRadius: DesignSystem.radius.full,
-    backgroundColor: DesignSystem.colors.primary[100],
+    backgroundColor: DesignSystem.colors.oura.subtleBackground,
     alignItems: 'center',
     justifyContent: 'center',
   },
   infoIcon: {
-    fontSize: 16,
+    fontSize: 14,
   },
   sectionTitle: {
-    fontSize: DesignSystem.typography.fontSize.xl,
-    fontWeight: DesignSystem.typography.fontWeight.bold,
+    fontSize: DesignSystem.typography.fontSize.lg,
+    fontWeight: DesignSystem.typography.fontWeight.medium,  // Lighter
     color: DesignSystem.colors.neutral[900],
     marginBottom: DesignSystem.spacing[4],
   },
   sectionSubtitle: {
     fontSize: DesignSystem.typography.fontSize.sm,
-    color: DesignSystem.colors.neutral[600],
+    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
+    color: DesignSystem.colors.neutral[500],
     marginBottom: DesignSystem.spacing[4],
   },
   quickActions: {
@@ -422,19 +446,28 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: DesignSystem.spacing[5],
     borderRadius: DesignSystem.radius.xl,
-    borderWidth: 2,
-    backgroundColor: DesignSystem.colors.neutral[0],
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
     alignItems: 'center',
-    ...DesignSystem.shadows.DEFAULT,
+    ...DesignSystem.shadows.sm,
+  },
+  hormoneDot: {
+    width: 8,
+    height: 8,
+    borderRadius: DesignSystem.radius.full,
+    position: 'absolute',
+    top: DesignSystem.spacing[3],
+    right: DesignSystem.spacing[3],
   },
   quickActionIcon: {
-    fontSize: 36,
+    fontSize: 32,
     marginBottom: DesignSystem.spacing[2],
   },
   quickActionText: {
     fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.semibold,
-    color: DesignSystem.colors.neutral[900],
+    fontWeight: DesignSystem.typography.fontWeight.regular,  // Lighter
+    color: DesignSystem.colors.neutral[700],
     textAlign: 'center',
   },
   featureGrid: {
@@ -444,35 +477,95 @@ const styles = StyleSheet.create({
   },
   featureCard: {
     width: (width - DesignSystem.spacing[6] * 2 - DesignSystem.spacing[3]) / 2,
-    backgroundColor: DesignSystem.colors.neutral[0],
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
     borderRadius: DesignSystem.radius.xl,
     padding: DesignSystem.spacing[5],
-    ...DesignSystem.shadows.md,
-    overflow: 'hidden',
-    position: 'relative',
+    ...DesignSystem.shadows.sm,
   },
-  featureGradient: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 100,
-    height: 100,
-    opacity: 0.1,
+  featureCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: DesignSystem.spacing[3],
+  },
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: DesignSystem.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   featureIcon: {
-    fontSize: 32,
-    marginBottom: DesignSystem.spacing[2],
+    fontSize: 24,
+  },
+  featureInfoButton: {
+    width: 24,
+    height: 24,
+    borderRadius: DesignSystem.radius.full,
+    backgroundColor: DesignSystem.colors.oura.subtleBackground,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureInfoIcon: {
+    fontSize: 12,
   },
   featureCardName: {
-    fontSize: DesignSystem.typography.fontSize.base,
-    fontWeight: DesignSystem.typography.fontWeight.bold,
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.medium,  // Lighter
     color: DesignSystem.colors.neutral[900],
     marginBottom: DesignSystem.spacing[1],
   },
   featureCardDescription: {
     fontSize: DesignSystem.typography.fontSize.xs,
+    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
     color: DesignSystem.colors.neutral[600],
-    lineHeight: DesignSystem.typography.fontSize.xs * DesignSystem.typography.lineHeight.relaxed,
+    lineHeight: DesignSystem.typography.fontSize.xs * 1.6,
+  },
+  // Impact Card Styles
+  impactCard: {
+    padding: 32,
+    borderRadius: 24,
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
+    marginBottom: 24,
+    ...DesignSystem.shadows.sm,
+    alignItems: 'center',
+  },
+  impactIcon: {
+    fontSize: 48,
+    marginBottom: DesignSystem.spacing[3],
+  },
+  impactTitle: {
+    fontSize: DesignSystem.typography.fontSize.xl,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.neutral[900],
+    marginBottom: DesignSystem.spacing[2],
+    textAlign: 'center',
+  },
+  impactDescription: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[600],
+    textAlign: 'center',
+    marginBottom: DesignSystem.spacing[5],
+    lineHeight: DesignSystem.typography.fontSize.sm * 1.6,
+  },
+  impactCTA: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: DesignSystem.spacing[2],
+  },
+  impactCTAText: {
+    fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.primary[500],
+  },
+  impactArrow: {
+    fontSize: DesignSystem.typography.fontSize.lg,
+    color: DesignSystem.colors.primary[500],
   },
   statsGrid: {
     flexDirection: 'row',
@@ -480,68 +573,68 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.neutral[0],
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
     borderRadius: DesignSystem.radius.lg,
     padding: DesignSystem.spacing[5],
     alignItems: 'center',
     ...DesignSystem.shadows.sm,
   },
   statValue: {
-    fontSize: DesignSystem.typography.fontSize['3xl'],
-    fontWeight: DesignSystem.typography.fontWeight.extrabold,
+    fontSize: DesignSystem.typography.fontSize['2xl'],
+    fontWeight: '200',  // Very thin like Oura
     color: DesignSystem.colors.primary[500],
     marginBottom: DesignSystem.spacing[1],
   },
   statLabel: {
     fontSize: DesignSystem.typography.fontSize.xs,
-    color: DesignSystem.colors.neutral[600],
+    color: DesignSystem.colors.neutral[500],
     textAlign: 'center',
-    fontWeight: DesignSystem.typography.fontWeight.medium,
+    fontWeight: DesignSystem.typography.fontWeight.light,
   },
   tipSection: {
     backgroundColor: DesignSystem.colors.primary[50],
     borderRadius: DesignSystem.radius.xl,
     padding: DesignSystem.spacing[6],
-    borderLeftWidth: 4,
-    borderLeftColor: DesignSystem.colors.primary[500],
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.primary[100],
   },
   tipIcon: {
-    fontSize: 32,
+    fontSize: 28,
     marginBottom: DesignSystem.spacing[2],
   },
   tipTitle: {
-    fontSize: DesignSystem.typography.fontSize.lg,
-    fontWeight: DesignSystem.typography.fontWeight.bold,
+    fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
     color: DesignSystem.colors.neutral[900],
     marginBottom: DesignSystem.spacing[2],
   },
   tipText: {
     fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.light,
     color: DesignSystem.colors.neutral[700],
-    lineHeight: DesignSystem.typography.fontSize.sm * DesignSystem.typography.lineHeight.relaxed,
+    lineHeight: DesignSystem.typography.fontSize.sm * 1.6,
   },
   fab: {
     position: 'absolute',
     bottom: DesignSystem.spacing[6],
     right: DesignSystem.spacing[6],
+    backgroundColor: DesignSystem.colors.primary[500],
     borderRadius: DesignSystem.radius.full,
-    ...DesignSystem.shadows['2xl'],
-  },
-  fabGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: DesignSystem.spacing[4],
     paddingHorizontal: DesignSystem.spacing[6],
-    borderRadius: DesignSystem.radius.full,
+    ...DesignSystem.shadows.lg,
   },
   fabIcon: {
-    fontSize: 24,
+    fontSize: 20,
     marginRight: DesignSystem.spacing[2],
   },
   fabText: {
-    fontSize: DesignSystem.typography.fontSize.base,
-    fontWeight: DesignSystem.typography.fontWeight.bold,
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
     color: DesignSystem.colors.neutral[0],
-    letterSpacing: DesignSystem.typography.letterSpacing.wide,
   },
 });

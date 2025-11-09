@@ -66,15 +66,16 @@ export function ReadyCard({ tests, userGender }: ReadyCardProps) {
   return (
     <>
       <TouchableOpacity 
-        style={[styles.card, { borderColor: color }]} 
+        style={styles.card} 
         onPress={handleViewBreakdown}
         activeOpacity={0.7}
       >
         <View style={styles.header}>
           <Text style={styles.label}>Your READY Score</Text>
           <View style={[styles.confidenceBadge, {
-            backgroundColor: readyData.confidence === 'high' ? '#10B981' : 
-                            readyData.confidence === 'medium' ? '#F59E0B' : '#EF4444'
+            backgroundColor: readyData.confidence === 'high' ? DesignSystem.colors.success.light : 
+                            readyData.confidence === 'medium' ? DesignSystem.colors.warning.light : 
+                            DesignSystem.colors.error.light
           }]}>
             <Text style={styles.confidenceText}>
               {readyData.confidence === 'high' ? 'High ✅' :
@@ -87,12 +88,12 @@ export function ReadyCard({ tests, userGender }: ReadyCardProps) {
         <View style={styles.ringContainer}>
           <ProgressRing
             score={readyData.score}
-            color={color}
+            color={DesignSystem.colors.primary[500]}  // Soft monotone color
             size={200}
             strokeWidth={16}
           />
           <View style={styles.scoreOverlay}>
-            <Text style={[styles.scoreNumber, { color }]}>{readyData.score}</Text>
+            <Text style={styles.scoreNumber}>{readyData.score}</Text>
             <Text style={styles.scoreEmoji}>{emoji}</Text>
           </View>
         </View>
@@ -259,12 +260,12 @@ function ProgressRing({
 
   return (
     <Svg width={size} height={size}>
-      {/* Background circle */}
+      {/* Background circle - Subtle Oura style */}
       <Circle
         cx={size / 2}
         cy={size / 2}
         r={radius}
-        stroke="#E5E7EB"
+        stroke={DesignSystem.colors.oura.divider}
         strokeWidth={strokeWidth}
         fill="none"
       />
@@ -289,10 +290,11 @@ const styles = StyleSheet.create({
   card: {
     padding: DesignSystem.spacing[8],  // 32px
     borderRadius: DesignSystem.radius['2xl'],  // 24px
-    backgroundColor: DesignSystem.colors.neutral[0],
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
     marginBottom: DesignSystem.spacing[6],
-    ...DesignSystem.shadows.lg,
-    // No border for cleaner look
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
+    ...DesignSystem.shadows.sm,  // Subtle shadow
   },
   lockedContainer: {
     alignItems: 'center',
@@ -304,12 +306,13 @@ const styles = StyleSheet.create({
   },
   lockedTitle: {
     fontSize: DesignSystem.typography.fontSize.xl,
-    fontWeight: DesignSystem.typography.fontWeight.bold,
+    fontWeight: DesignSystem.typography.fontWeight.medium,  // Lighter
     marginBottom: DesignSystem.spacing[2],
     color: DesignSystem.colors.neutral[900],
   },
   lockedSubtitle: {
     fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
     color: DesignSystem.colors.neutral[600],
     marginBottom: DesignSystem.spacing[3],
     textAlign: 'center',
@@ -317,6 +320,7 @@ const styles = StyleSheet.create({
   },
   lockedHint: {
     fontSize: DesignSystem.typography.fontSize.xs,
+    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
     color: DesignSystem.colors.neutral[500],
     textAlign: 'center',
     fontStyle: 'italic',
@@ -328,9 +332,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   label: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '600',
+    fontSize: 13,
+    color: DesignSystem.colors.neutral[500],
+    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
+    letterSpacing: 0.5,
   },
   confidenceBadge: {
     paddingHorizontal: 12,
@@ -339,8 +344,8 @@ const styles = StyleSheet.create({
   },
   confidenceText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: DesignSystem.typography.fontWeight.regular,  // Lighter
+    color: DesignSystem.colors.neutral[700],  // Darker text for soft backgrounds
   },
   ringContainer: {
     alignItems: 'center',
@@ -354,27 +359,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scoreNumber: {
-    fontSize: 56,
-    fontWeight: 'bold',
+    fontSize: 72,  // Larger like Oura
+    fontWeight: '200',  // Very thin
+    color: DesignSystem.colors.primary[500],
   },
   scoreEmoji: {
     fontSize: 32,
     marginTop: 4,
   },
   message: {
-    fontSize: 16,
+    fontSize: 15,
     textAlign: 'center',
-    color: '#000',
+    color: DesignSystem.colors.neutral[800],
     marginBottom: 8,
-    fontWeight: '500',
+    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
   },
   levelLabel: {
-    fontSize: 14,
+    fontSize: 12,
     textAlign: 'center',
-    color: '#666',
+    color: DesignSystem.colors.neutral[500],
     marginBottom: 20,
-    fontWeight: '600',
-    letterSpacing: 1,
+    fontWeight: DesignSystem.typography.fontWeight.regular,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
   },
   actions: {
     flexDirection: 'row',
