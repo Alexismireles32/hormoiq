@@ -15,6 +15,9 @@ import { ReadyCard } from '@/components/ReadyCard';
 import { BioAgeCard } from '@/components/BioAgeCard';
 import { SwipeableScoreCards } from '@/components/SwipeableScoreCards';
 import { FeatureExplainer, FeatureType } from '@/components/FeatureExplainer';
+import { SkeletonLoader, SkeletonCard, SkeletonScoreCard } from '@/components/SkeletonLoader';
+import { EmptyStateIllustration } from '@/components/EmptyStateIllustration';
+import { ProgressTracker } from '@/components/ProgressTracker';
 import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
 import * as Haptics from 'expo-haptics';
@@ -132,10 +135,104 @@ export default function DashboardScreen() {
     setShowExplainer(true);
   };
 
+  // Show skeleton loaders while loading
   if (loading) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={DesignSystem.colors.primary[500]} />
+      <View style={styles.container}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header Skeleton */}
+          <RNView style={styles.header}>
+            <RNView>
+              <SkeletonLoader width={120} height={16} style={{ marginBottom: 8 }} />
+              <SkeletonLoader width={150} height={28} />
+            </RNView>
+            <SkeletonLoader
+              width={48}
+              height={48}
+              borderRadius={DesignSystem.radius.full}
+            />
+          </RNView>
+
+          {/* Score Card Skeletons */}
+          <SkeletonScoreCard />
+          
+          {/* Quick Actions Skeleton */}
+          <RNView style={styles.section}>
+            <SkeletonLoader width={100} height={20} style={{ marginBottom: 16 }} />
+            <RNView style={styles.quickActions}>
+              {[1, 2, 3].map((i) => (
+                <SkeletonLoader
+                  key={i}
+                  width={(width - DesignSystem.spacing[6] * 2 - DesignSystem.spacing[3] * 2) / 3}
+                  height={100}
+                  borderRadius={DesignSystem.radius.xl}
+                />
+              ))}
+            </RNView>
+          </RNView>
+
+          {/* Feature Cards Skeleton */}
+          <RNView style={styles.section}>
+            <SkeletonLoader width={140} height={24} style={{ marginBottom: 16 }} />
+            <RNView style={styles.featureGrid}>
+              {[1, 2, 3].map((i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </RNView>
+          </RNView>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // Empty state - no tests logged yet
+  if (tests.length === 0) {
+    return (
+      <View style={styles.container}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {/* Header */}
+          <RNView style={styles.header}>
+            <RNView>
+              <Text style={styles.greeting}>{getGreeting()}</Text>
+              <Text style={styles.appName}>HormoIQ</Text>
+            </RNView>
+            <TouchableOpacity
+              style={styles.profileButton}
+              onPress={handleProfilePress}
+            >
+              <Text style={styles.profileIcon}>👤</Text>
+            </TouchableOpacity>
+          </RNView>
+
+          {/* Welcome / Empty State */}
+          <EmptyStateIllustration
+            type="no_tests"
+            title="Welcome to HormoIQ"
+            description="Start your hormone tracking journey by logging your first test. It takes less than a minute!"
+            actionLabel="Log Your First Test"
+            onActionPress={() => router.push('/test/input')}
+            secondaryActionLabel="Learn More"
+            onSecondaryActionPress={() => handleShowExplainer('test')}
+          />
+        </ScrollView>
+
+        {/* Feature Explainer Modal */}
+        <FeatureExplainer
+          visible={showExplainer}
+          feature={currentFeature}
+          onClose={() => setShowExplainer(false)}
+        />
       </View>
     );
   }
@@ -234,10 +331,15 @@ export default function DashboardScreen() {
           </RNView>
         </SwipeableScoreCards>
 
-        {/* Quick TEST™ Actions */}
+        {/* Progress Tracker - Gamification */}
+        <RNView style={styles.section}>
+          <ProgressTracker tests={tests} userAge={userAge} />
+        </RNView>
+
+        {/* Quick TEST™ Actions - Prominent CTA */}
         <RNView style={styles.section}>
           <RNView style={styles.sectionHeader}>
-            <Text style={styles.featureName}>TEST™</Text>
+            <Text style={styles.sectionTitle}>Log Your Test</Text>
             <TouchableOpacity
               style={styles.infoButton}
               onPress={() => handleShowExplainer('test')}
@@ -245,7 +347,31 @@ export default function DashboardScreen() {
               <Text style={styles.infoIcon}>ℹ️</Text>
             </TouchableOpacity>
           </RNView>
-          <Text style={styles.sectionSubtitle}>Log your hormone levels</Text>
+          
+          {/* Last Test Time */}
+          {tests.length > 0 && (
+            <Text style={styles.lastTestInfo}>
+              Last test:{' '}
+              {(() => {
+                const lastTest = new Date(tests[0].timestamp);
+                const now = new Date();
+                const diffMs = now.getTime() - lastTest.getTime();
+                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                const diffMins = Math.floor(diffMs / (1000 * 60));
+                
+                if (diffHrs < 1) {
+                  return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+                } else if (diffHrs < 24) {
+                  return `${diffHrs} hour${diffHrs !== 1 ? 's' : ''} ago`;
+                } else {
+                  const diffDays = Math.floor(diffHrs / 24);
+                  return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+                }
+              })()}
+            </Text>
+          )}
+          
+          <Text style={styles.sectionSubtitle}>Choose a hormone to log</Text>
           <RNView style={styles.quickActions}>
             {HORMONES.map((hormone) => (
               <TouchableOpacity
@@ -437,6 +563,13 @@ const styles = StyleSheet.create({
     fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
     color: DesignSystem.colors.neutral[500],
     marginBottom: DesignSystem.spacing[4],
+  },
+  lastTestInfo: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.primary[500],
+    marginBottom: DesignSystem.spacing[2],
+    paddingHorizontal: DesignSystem.spacing[1],
   },
   quickActions: {
     flexDirection: 'row',
