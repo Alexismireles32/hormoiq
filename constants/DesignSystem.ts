@@ -253,10 +253,12 @@ export const DesignSystem = {
   // ============================================
   animation: {
     duration: {
+      instant: 100,
       fast: 150,
       normal: 250,
       slow: 350,
       slower: 500,
+      slowest: 700,
     },
     easing: {
       linear: 'linear',
@@ -265,6 +267,44 @@ export const DesignSystem = {
       easeInOut: 'ease-in-out',
       spring: 'spring',
     },
+  },
+  
+  // ============================================
+  // TOUCH TARGETS - Accessibility Standards
+  // ============================================
+  touchTarget: {
+    minimum: 44,  // WCAG minimum touch target size
+    comfortable: 48,
+    large: 56,
+    xlarge: 64,
+  },
+  
+  // ============================================
+  // ICON SIZES - Consistent Scaling
+  // ============================================
+  iconSize: {
+    xs: 16,
+    sm: 20,
+    md: 24,
+    lg: 32,
+    xl: 40,
+    '2xl': 48,
+    '3xl': 64,
+  },
+  
+  // ============================================
+  // Z-INDEX - Stacking Order
+  // ============================================
+  zIndex: {
+    base: 0,
+    dropdown: 1000,
+    sticky: 1100,
+    fixed: 1200,
+    modalBackdrop: 1300,
+    modal: 1400,
+    popover: 1500,
+    tooltip: 1600,
+    notification: 1700,
   },
   
   // ============================================
