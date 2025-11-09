@@ -15,6 +15,7 @@ import { HORMONE_RANGES } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { DesignSystem } from '@/constants/DesignSystem';
 import * as Haptics from 'expo-haptics';
+import { AuroraBackground } from '@/components/AuroraBackground';
 
 const HORMONE_INFO = {
   cortisol: {

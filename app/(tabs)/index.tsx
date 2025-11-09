@@ -1,33 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  RefreshControl,
-  View as RNView,
-  ActivityIndicator,
-  Dimensions,
-} from 'react-native';
-import { Text, View } from '@/components/Themed';
-import { router } from 'expo-router';
-import { useAuth } from '@/contexts/AuthContext';
-import { ReadyCard } from '@/components/ReadyCard';
+import { AnimatedCard } from '@/components/AnimatedCard';
+import { AnimatedTouchable } from '@/components/AnimatedTouchable';
+import { AuroraBackground } from '@/components/AuroraBackground';
 import { BioAgeCard } from '@/components/BioAgeCard';
+import { FeatureExplainer, FeatureType } from '@/components/FeatureExplainer';
+import { FirstTestTutorial } from '@/components/FirstTestTutorial';
+import { defaultTourSteps, GuidedTour } from '@/components/GuidedTour';
+import { ProgressTracker } from '@/components/ProgressTracker';
+import { ReadyCard } from '@/components/ReadyCard';
+import { SkeletonCard, SkeletonLoader, SkeletonScoreCard } from '@/components/SkeletonLoader';
 import { SwipeableScoreCards } from '@/components/SwipeableScoreCards';
 import { TestScheduleCard } from '@/components/TestScheduleCard';
-import { FeatureExplainer, FeatureType } from '@/components/FeatureExplainer';
-import { SkeletonLoader, SkeletonCard, SkeletonScoreCard } from '@/components/SkeletonLoader';
-import { EmptyStateIllustration } from '@/components/EmptyStateIllustration';
-import { ProgressTracker } from '@/components/ProgressTracker';
-import { GuidedTour, defaultTourSteps } from '@/components/GuidedTour';
-import { FirstTestTutorial } from '@/components/FirstTestTutorial';
-import { AnimatedTouchable } from '@/components/AnimatedTouchable';
-import { AnimatedCard } from '@/components/AnimatedCard';
+import { Text, View } from '@/components/Themed';
+import { DesignSystem } from '@/constants/DesignSystem';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
-import * as Haptics from 'expo-haptics';
-import { DesignSystem } from '@/constants/DesignSystem';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
+import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  Dimensions,
+  RefreshControl,
+  View as RNView,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity
+} from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -251,7 +250,8 @@ export default function DashboardScreen() {
   const hasNoTests = tests.length === 0;
 
   return (
-    <View style={styles.container}>
+    <AuroraBackground showRadialGradient={true}>
+      <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
@@ -523,13 +523,14 @@ export default function DashboardScreen() {
         onStartTest={handleStartFirstTest}
       />
     </View>
+    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.neutral[50],  // Off-white cream
+    // backgroundColor removed for Aurora background
   },
   centered: {
     justifyContent: 'center',

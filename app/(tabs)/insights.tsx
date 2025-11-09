@@ -22,6 +22,7 @@ import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
 import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
+import { AuroraBackground } from '@/components/AuroraBackground';
 
 const { width } = Dimensions.get('window');
 
