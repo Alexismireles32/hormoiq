@@ -31,6 +31,7 @@ interface Message {
   content: string;
   timestamp: string;
   suggestedQuestions?: string[];
+  isStreaming?: boolean; // For streaming animation
 }
 
 export default function AskScreen() {
@@ -40,6 +41,7 @@ export default function AskScreen() {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
+  const [loadingPhase, setLoadingPhase] = useState<'searching' | 'reading' | 'thinking' | null>(null); // Perplexity-style loading
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -211,6 +213,11 @@ export default function AskScreen() {
     setLoading(true);
     setSuggestedQuestions([]); // Clear suggestions while loading
 
+    // Perplexity-style loading phases
+    setLoadingPhase('searching');
+    setTimeout(() => setLoadingPhase('reading'), 800);
+    setTimeout(() => setLoadingPhase('thinking'), 1600);
+
     // Scroll to bottom
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -239,18 +246,43 @@ export default function AskScreen() {
         ],
       });
 
-      // Add assistant message to UI
       // Sanitize AI response to prevent XSS
       const sanitizedReply = sanitizeAIResponse(response.reply);
       
+      // Add assistant message with streaming animation
+      const assistantMessageId = (Date.now() + 1).toString();
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: assistantMessageId,
         role: 'assistant',
         content: sanitizedReply,
         timestamp: new Date().toISOString(),
+        isStreaming: true,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+      setLoadingPhase(null);
+
+      // Simulate streaming by progressively revealing text
+      const words = sanitizedReply.split(' ');
+      let currentText = '';
+      for (let i = 0; i < words.length; i++) {
+        currentText += (i > 0 ? ' ' : '') + words[i];
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? { ...msg, content: currentText }
+              : msg
+          )
+        );
+        await new Promise((resolve) => setTimeout(resolve, 30)); // 30ms per word
+      }
+
+      // Mark streaming complete
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId ? { ...msg, isStreaming: false } : msg
+        )
+      );
 
       // Save both messages to database
       await supabase.from('chat_messages').insert([
@@ -285,6 +317,7 @@ export default function AskScreen() {
 
       // Remove the user message if failed
       setMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id));
+      setLoadingPhase(null);
     } finally {
       setLoading(false);
     }
@@ -345,13 +378,25 @@ export default function AskScreen() {
             <View style={styles.emptyIconContainer}>
               <Text style={styles.emptyIcon}>✦</Text>
             </View>
-            <Text style={styles.emptyTitle}>Ask anything about your hormones</Text>
+            <Text style={styles.emptyTitle}>Your AI Hormone Coach</Text>
             <Text style={styles.emptyText}>
-              I have access to all your test results, ReadyScore, BioAge, and patterns. Get personalized, data-driven insights.
+              Get personalized insights based on your test results, patterns, and data. Ask anything about hormone optimization.
             </Text>
+            
+            {/* What I Know Section - Perplexity Style */}
+            <View style={styles.dataAccessCard}>
+              <Text style={styles.dataAccessTitle}>What I have access to:</Text>
+              <View style={styles.dataAccessList}>
+                <Text style={styles.dataAccessItem}>✓ Your hormone test results</Text>
+                <Text style={styles.dataAccessItem}>✓ ReadyScore & BioAge calculations</Text>
+                <Text style={styles.dataAccessItem}>✓ Impact analyses & patterns</Text>
+                <Text style={styles.dataAccessItem}>✓ Active protocols & progress</Text>
+              </View>
+            </View>
+
             <View style={styles.disclaimer}>
               <Text style={styles.disclaimerText}>
-                💡 Wellness optimization only • Not medical advice
+                Wellness optimization only • Not medical advice
               </Text>
             </View>
           </View>
@@ -370,14 +415,21 @@ export default function AskScreen() {
                 <Text style={styles.assistantIconText}>✦</Text>
               </View>
             )}
-            <Text
-              style={[
-                styles.messageText,
-                message.role === 'user' ? styles.userText : styles.assistantText,
-              ]}
-            >
-              {message.content}
-            </Text>
+            {message.role === 'assistant' ? (
+              // Format assistant messages with proper paragraph spacing
+              message.content.split('\n\n').map((paragraph, pIndex) => (
+                <Text
+                  key={`${message.id}-p${pIndex}`}
+                  style={[styles.messageText, styles.assistantText, pIndex > 0 && styles.paragraphSpacing]}
+                >
+                  {paragraph.trim()}
+                </Text>
+              ))
+            ) : (
+              <Text style={[styles.messageText, styles.userText]}>
+                {message.content}
+              </Text>
+            )}
           </View>
         ))}
 
@@ -386,10 +438,21 @@ export default function AskScreen() {
             <View style={styles.assistantIconSmall}>
               <Text style={styles.assistantIconText}>✦</Text>
             </View>
-            <View style={styles.typingIndicator}>
-              <View style={styles.typingDot} />
-              <View style={[styles.typingDot, styles.typingDotDelay1]} />
-              <View style={[styles.typingDot, styles.typingDotDelay2]} />
+            <View style={styles.loadingContainer}>
+              {loadingPhase === 'searching' && (
+                <Text style={styles.loadingPhaseText}>Searching your data...</Text>
+              )}
+              {loadingPhase === 'reading' && (
+                <Text style={styles.loadingPhaseText}>Reading patterns...</Text>
+              )}
+              {loadingPhase === 'thinking' && (
+                <Text style={styles.loadingPhaseText}>Generating insights...</Text>
+              )}
+              <View style={styles.typingIndicator}>
+                <View style={styles.typingDot} />
+                <View style={[styles.typingDot, styles.typingDotDelay1]} />
+                <View style={[styles.typingDot, styles.typingDotDelay2]} />
+              </View>
             </View>
           </View>
         )}
@@ -397,12 +460,13 @@ export default function AskScreen() {
         {/* Suggested Questions - Perplexity Style */}
         {suggestedQuestions.length > 0 && !loading && (
           <View style={styles.suggestionsContainer}>
+            <Text style={styles.suggestionsTitle}>Related</Text>
             {suggestedQuestions.map((question, index) => (
               <TouchableOpacity
                 key={index}
                 style={styles.suggestionPill}
                 onPress={() => handleSuggestedQuestion(question)}
-                activeOpacity={0.7}
+                activeOpacity={0.6}
               >
                 <Text style={styles.suggestionIcon}>→</Text>
                 <Text style={styles.suggestionText}>{question}</Text>
@@ -547,22 +611,50 @@ const styles = StyleSheet.create({
     color: DesignSystem.colors.neutral[600],
     textAlign: 'center',
     lineHeight: DesignSystem.typography.fontSize.base * 1.6,
-    marginBottom: DesignSystem.spacing[8],
-    maxWidth: 320,
+    marginBottom: DesignSystem.spacing[6],
+    maxWidth: 340,
+  },
+  dataAccessCard: {
+    backgroundColor: DesignSystem.colors.neutral[50],
+    borderRadius: DesignSystem.radius.xl,
+    padding: DesignSystem.spacing[5],
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.neutral[200],
+    marginBottom: DesignSystem.spacing[6],
+    width: '100%',
+    maxWidth: 340,
+  },
+  dataAccessTitle: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.neutral[700],
+    marginBottom: DesignSystem.spacing[3],
+    letterSpacing: -0.2,
+  },
+  dataAccessList: {
+    gap: DesignSystem.spacing[2],
+  },
+  dataAccessItem: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[600],
+    letterSpacing: -0.2,
+    lineHeight: DesignSystem.typography.fontSize.sm * 1.5,
   },
   disclaimer: {
-    backgroundColor: DesignSystem.colors.neutral[50],
+    backgroundColor: DesignSystem.colors.primary[50],
     borderRadius: DesignSystem.radius.lg,
     paddingVertical: DesignSystem.spacing[3],
     paddingHorizontal: DesignSystem.spacing[6],
     borderWidth: 1,
-    borderColor: DesignSystem.colors.neutral[200],
+    borderColor: DesignSystem.colors.primary[200],
   },
   disclaimerText: {
     fontSize: DesignSystem.typography.fontSize.xs,
     fontWeight: DesignSystem.typography.fontWeight.medium,
-    color: DesignSystem.colors.neutral[600],
+    color: DesignSystem.colors.primary[700],
     textAlign: 'center',
+    letterSpacing: -0.1,
   },
   messageBubble: {
     marginBottom: DesignSystem.spacing[6],
@@ -613,16 +705,28 @@ const styles = StyleSheet.create({
   assistantText: {
     color: DesignSystem.colors.neutral[900],
   },
+  paragraphSpacing: {
+    marginTop: DesignSystem.spacing[4],
+  },
+  loadingContainer: {
+    gap: DesignSystem.spacing[2],
+  },
+  loadingPhaseText: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.neutral[600],
+    letterSpacing: -0.2,
+  },
   typingIndicator: {
     flexDirection: 'row',
     gap: DesignSystem.spacing[2],
-    paddingVertical: DesignSystem.spacing[2],
+    paddingVertical: DesignSystem.spacing[1],
   },
   typingDot: {
-    width: 8,
-    height: 8,
+    width: 6,
+    height: 6,
     borderRadius: DesignSystem.radius.full,
-    backgroundColor: DesignSystem.colors.neutral[400],
+    backgroundColor: DesignSystem.colors.primary[400],
   },
   typingDotDelay1: {
     opacity: 0.7,
@@ -631,30 +735,45 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   suggestionsContainer: {
-    marginTop: DesignSystem.spacing[8],
+    marginTop: DesignSystem.spacing[6],
     gap: DesignSystem.spacing[3],
+  },
+  suggestionsTitle: {
+    fontSize: DesignSystem.typography.fontSize.xs,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.neutral[500],
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: DesignSystem.spacing[2],
   },
   suggestionPill: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: DesignSystem.colors.neutral[0],
-    borderRadius: DesignSystem.radius.xl,
-    borderWidth: 1,
-    borderColor: DesignSystem.colors.neutral[300],
+    borderRadius: DesignSystem.radius.lg,
+    borderWidth: 1.5,
+    borderColor: DesignSystem.colors.neutral[200],
     paddingVertical: DesignSystem.spacing[4],
     paddingHorizontal: DesignSystem.spacing[5],
+    shadowColor: DesignSystem.colors.neutral[900],
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   suggestionIcon: {
-    fontSize: 14,
-    color: DesignSystem.colors.neutral[400],
+    fontSize: 16,
+    color: DesignSystem.colors.primary[500],
     marginRight: DesignSystem.spacing[3],
+    fontWeight: 'bold',
   },
   suggestionText: {
     flex: 1,
     fontSize: DesignSystem.typography.fontSize.sm,
     fontWeight: DesignSystem.typography.fontWeight.medium,
-    color: DesignSystem.colors.neutral[700],
-    letterSpacing: -0.2,
+    color: DesignSystem.colors.neutral[800],
+    letterSpacing: -0.3,
+    lineHeight: DesignSystem.typography.fontSize.sm * 1.4,
   },
   inputContainer: {
     padding: DesignSystem.spacing[5],
