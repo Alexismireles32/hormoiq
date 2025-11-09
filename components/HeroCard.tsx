@@ -15,6 +15,7 @@ interface HeroCardProps {
 
 export default function HeroCard({ insight, recommendations, primaryAction }: HeroCardProps) {
   const handleAction = () => {
+    // Medium haptic for important action (100/100 UX)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push(primaryAction.route as any);
   };
@@ -51,13 +52,14 @@ const styles = StyleSheet.create({
   heroCard: {
     backgroundColor: DesignSystem.colors.primary[500], // Primary purple
     borderRadius: 20,
-    padding: 24,
+    padding: 24, // 100/100 UX: 24px padding vs 18px for other cards
     marginBottom: 24,
+    // Enhanced shadow for prominence (100/100 UX)
     shadowColor: DesignSystem.colors.primary[500],
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 16,
   },
   heroLabel: {
     fontSize: 14,

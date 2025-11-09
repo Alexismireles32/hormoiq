@@ -16,6 +16,7 @@ import { DesignSystem } from '@/constants/DesignSystem';
 import { CircularProgress } from './ProgressBar';
 import { router } from 'expo-router';
 import { AccuracyBadge, calculateAccuracyLevel, getAccuracyRequirements, getAccuracyMessage } from './AccuracyBadge';
+import { getReadyScoreContext } from '@/utils/readyScoreContext';
 
 interface ReadyCardProps {
   tests: HormoneTest[];
@@ -126,6 +127,9 @@ export function ReadyCard({ tests, userGender }: ReadyCardProps) {
   const color = getReadyColor(readyData.score);
   const emoji = getReadyEmoji(readyData.score);
   const message = getReadyMessage(readyData.score);
+  
+  // Get contextual information (100/100 UX Enhancement)
+  const context = getReadyScoreContext(readyData.score);
 
   return (
     <>
@@ -146,27 +150,33 @@ export function ReadyCard({ tests, userGender }: ReadyCardProps) {
           </View>
         </View>
 
+        {/* Contextual Label + Percentile (100/100 UX) */}
+        <View style={styles.contextHeader}>
+          <Text style={[styles.contextLabel, { color: context.color }]}>
+            {context.emoji} {context.label}
+          </Text>
+          <View style={[styles.percentileBadge, { backgroundColor: context.color + '20', borderColor: context.color }]}>
+            <Text style={[styles.percentileText, { color: context.color }]}>
+              {context.percentile}
+            </Text>
+          </View>
+        </View>
+
         {/* Progress Ring */}
         <View style={styles.ringContainer}>
           <ProgressRing
             score={readyData.score}
-            color={DesignSystem.colors.primary[500]}  // Soft monotone color
+            color={context.color}  // Dynamic color based on tier
             size={200}
             strokeWidth={16}
           />
           <View style={styles.scoreOverlay}>
             <Text style={styles.scoreNumber}>{readyData.score}</Text>
-            <Text style={styles.scoreEmoji}>{emoji}</Text>
           </View>
         </View>
 
-        <Text style={styles.message}>{message}</Text>
-        <Text style={styles.levelLabel}>
-          {readyData.level === 'exceptional' ? 'EXCEPTIONAL' :
-           readyData.level === 'good' ? 'GOOD' :
-           readyData.level === 'moderate' ? 'MODERATE' :
-           readyData.level === 'low' ? 'LOW' : 'VERY LOW'}
-        </Text>
+        {/* Contextual Message (100/100 UX) */}
+        <Text style={styles.contextMessage}>{context.message}</Text>
 
         <View style={styles.actions}>
           <TouchableOpacity 
@@ -454,6 +464,39 @@ const styles = StyleSheet.create({
     color: DesignSystem.colors.neutral[500],
     fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
     letterSpacing: 0.5,
+  },
+  // Contextual ReadyScore Styles (100/100 UX)
+  contextHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  contextLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  percentileBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1.5,
+  },
+  percentileText: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  contextMessage: {
+    fontSize: 14,
+    color: '#4B5563',
+    fontWeight: '400',
+    lineHeight: 20,
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 16,
   },
   confidenceBadge: {
     paddingHorizontal: 12,

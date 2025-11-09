@@ -33,6 +33,7 @@ import { generateHeroInsight, HeroInsight } from '@/utils/heroInsights';
 import { generateProactiveMessage } from '@/utils/proactiveAI';
 import { calculateStreak } from '@/utils/streakCalculator';
 import { getReadyScoreContext } from '@/utils/readyScoreContext';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
@@ -328,24 +329,25 @@ export default function DashboardScreen() {
 
         {/* Hero Card - Today's Focus (100/100 UX Enhancement) */}
         {heroInsight.insight && (
-          <AnimatedCard delay={0}>
+          <Animated.View entering={FadeInDown.delay(100).duration(500)}>
             <HeroCard
               insight={heroInsight.insight}
               recommendations={heroInsight.recommendations}
               primaryAction={heroInsight.primaryAction}
             />
-          </AnimatedCard>
+          </Animated.View>
         )}
 
         {/* Test Schedule Card */}
         {user && (
-          <RNView style={styles.section}>
+          <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.section}>
             <TestScheduleCard userId={user.id} />
-          </RNView>
+          </Animated.View>
         )}
 
         {/* Swipeable Score Cards - Oura Style */}
-        <SwipeableScoreCards>
+        <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+          <SwipeableScoreCards>
           {/* READYSCORE™ Card */}
           <RNView>
             <RNView style={styles.sectionHeader}>
@@ -405,15 +407,16 @@ export default function DashboardScreen() {
               </RNView>
             </TouchableOpacity>
           </RNView>
-        </SwipeableScoreCards>
+          </SwipeableScoreCards>
+        </Animated.View>
 
         {/* Progress Tracker - Gamification */}
-        <RNView style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(400).duration(500)} style={styles.section}>
           <ProgressTracker tests={tests} userAge={userAge} />
-        </RNView>
+        </Animated.View>
 
         {/* Quick TEST™ Actions - Prominent CTA */}
-        <RNView style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(500).duration(500)} style={styles.section}>
           <RNView style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Log Your Test</Text>
             <TouchableOpacity
@@ -463,10 +466,10 @@ export default function DashboardScreen() {
               </AnimatedCard>
             ))}
           </RNView>
-        </RNView>
+        </Animated.View>
 
         {/* Feature Grid - Oura Style with Pastel Backgrounds */}
-        <RNView style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(600).duration(500)} style={styles.section}>
           <Text style={styles.sectionTitle}>Explore Features</Text>
           <RNView style={styles.featureGrid}>
             {FEATURES.map((feature, index) => (
@@ -502,10 +505,10 @@ export default function DashboardScreen() {
               </AnimatedCard>
             ))}
           </RNView>
-        </RNView>
+        </Animated.View>
 
         {/* Quick Stats */}
-        <RNView style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(700).duration(500)} style={styles.section}>
           <Text style={styles.sectionTitle}>Your Progress</Text>
           <RNView style={styles.statsGrid}>
             <RNView style={styles.statCard}>
@@ -530,16 +533,16 @@ export default function DashboardScreen() {
               <Text style={styles.statLabel}>Days Tracked</Text>
             </RNView>
           </RNView>
-        </RNView>
+        </Animated.View>
 
         {/* Tip Section */}
-        <RNView style={styles.tipSection}>
+        <Animated.View entering={FadeInDown.delay(800).duration(500)} style={styles.tipSection}>
           <Text style={styles.tipIcon}>💡</Text>
           <Text style={styles.tipTitle}>Optimization Tip</Text>
           <Text style={styles.tipText}>
             Test your hormones at the same time each day for the most consistent tracking and better insights from READYSCORE™.
           </Text>
-        </RNView>
+        </Animated.View>
 
         <RNView style={{ height: DesignSystem.spacing[20] }} />
       </ScrollView>
