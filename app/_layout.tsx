@@ -68,18 +68,26 @@ function RootLayoutNav() {
     async function fetchProfile() {
       if (!user) {
         setProfileLoading(false);
+        setUserProfile(null);
         return;
       }
 
+      setProfileLoading(true);
       try {
         const { data, error } = await supabase
           .from('users')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (!error && data) {
+          console.log('Profile fetched:', data.email, 'onboarding:', data.onboarding_completed);
           setUserProfile(data as UserProfile);
+        } else if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching profile:', error);
+        } else {
+          // No profile yet (new user)
+          setUserProfile(null);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -89,7 +97,7 @@ function RootLayoutNav() {
     }
 
     fetchProfile();
-  }, [user]);
+  }, [user, segments]); // Add segments to dependency to refetch on navigation
 
   // Handle navigation based on auth and onboarding status
   useEffect(() => {

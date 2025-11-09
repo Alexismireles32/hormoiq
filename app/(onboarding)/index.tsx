@@ -58,7 +58,11 @@ export default function OnboardingScreen() {
     setLoading(true);
 
     try {
-      console.log('Starting onboarding for user:', user.id, 'email:', user.email);
+      // Get fresh session to ensure we have the latest user data with email
+      const { data: { session: freshSession } } = await supabase.auth.getSession();
+      const userEmail = freshSession?.user?.email || user.email || null;
+      
+      console.log('Starting onboarding for user:', user.id, 'email:', userEmail);
       
       // First, check if user exists by ID
       const { data: existingUser, error: checkError } = await supabase
@@ -75,17 +79,21 @@ export default function OnboardingScreen() {
       console.log('Existing user check:', existingUser ? 'FOUND' : 'NOT FOUND');
 
       // Also check if email exists (different user ID with same email - edge case)
-      const { data: emailExists } = await supabase
-        .from('users')
-        .select('id, email')
-        .eq('email', user.email)
-        .maybeSingle();
+      let emailExists = null;
+      if (userEmail) {
+        const { data } = await supabase
+          .from('users')
+          .select('id, email')
+          .eq('email', userEmail)
+          .maybeSingle();
+        emailExists = data;
+      }
 
       console.log('Email exists check:', emailExists);
 
       const userData = {
         id: user.id,
-        email: user.email,
+        email: userEmail,
         age: age,
         gender: biologicalSex,
         on_hormone_therapy: onHormoneTherapy === 'yes',
@@ -117,8 +125,11 @@ export default function OnboardingScreen() {
 
       console.log('Onboarding successful!');
       
-      // Navigate to main app
-      router.replace('/(tabs)');
+      // Force reload to update profile state
+      // Use a small delay to ensure database write completes
+      setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 100);
     } catch (error) {
       console.error('Onboarding catch error:', error);
       showErrorAlert(error, 'Onboarding Error');
