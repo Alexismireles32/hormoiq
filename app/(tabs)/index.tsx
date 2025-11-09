@@ -23,6 +23,7 @@ import { GuidedTour, defaultTourSteps } from '@/components/GuidedTour';
 import { FirstTestTutorial } from '@/components/FirstTestTutorial';
 import { AnimatedTouchable } from '@/components/AnimatedTouchable';
 import { AnimatedCard } from '@/components/AnimatedCard';
+import AnimatedGreeting from '@/components/AnimatedGreeting';
 import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
 import * as Haptics from 'expo-haptics';
@@ -82,6 +83,7 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [userGender, setUserGender] = useState<'male' | 'female' | 'other'>('male');
   const [userAge, setUserAge] = useState(30);
+  const [userName, setUserName] = useState<string>('');
   const [showExplainer, setShowExplainer] = useState(false);
   const [currentFeature, setCurrentFeature] = useState<FeatureType>('test');
   const [showTour, setShowTour] = useState(false);
@@ -155,6 +157,13 @@ export default function DashboardScreen() {
       if (userData) {
         setUserGender(userData.gender || 'male');
         setUserAge(userData.age || 30);
+      }
+
+      // Extract user name from metadata (use test_code as name for now)
+      if (user.user_metadata?.test_code) {
+        setUserName(user.user_metadata.test_code);
+      } else {
+        setUserName('User');
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -261,16 +270,20 @@ export default function DashboardScreen() {
         }
       >
         {/* Header */}
-        <RNView style={styles.header}>
-          <RNView>
-            <Text style={styles.greeting}>{getGreeting()}</Text>
-            <Text style={styles.appName}>HormoIQ</Text>
-          </RNView>
+        {/* Animated Greeting */}
+        <AnimatedGreeting 
+          userName={userName || 'User'} 
+          style={styles.greetingCard}
+        />
+
+        {/* Settings Button */}
+        <RNView style={styles.settingsRow}>
           <TouchableOpacity
-            style={styles.profileButton}
+            style={styles.settingsButton}
             onPress={handleProfilePress}
           >
-            <Text style={styles.profileIcon}>👤</Text>
+            <Text style={styles.settingsIcon}>⚙️</Text>
+            <Text style={styles.settingsText}>Settings</Text>
           </TouchableOpacity>
         </RNView>
 
@@ -542,37 +555,33 @@ const styles = StyleSheet.create({
     padding: DesignSystem.spacing[6],
     paddingTop: DesignSystem.spacing[12],
   },
-  header: {
+  greetingCard: {
+    marginBottom: DesignSystem.spacing[6],
+  },
+  settingsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
+    marginBottom: DesignSystem.spacing[6],
+  },
+  settingsButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: DesignSystem.spacing[8],
-  },
-  greeting: {
-    fontSize: DesignSystem.typography.fontSize.base,
-    color: DesignSystem.colors.neutral[500],
-    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
-    marginBottom: DesignSystem.spacing[1],
-  },
-  appName: {
-    fontSize: DesignSystem.typography.fontSize['3xl'],
-    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight Oura style
-    color: DesignSystem.colors.neutral[900],
-    letterSpacing: 1,
-  },
-  profileButton: {
-    width: 48,
-    height: 48,
+    paddingVertical: DesignSystem.spacing[3],
+    paddingHorizontal: DesignSystem.spacing[5],
+    backgroundColor: DesignSystem.colors.surface,
     borderRadius: DesignSystem.radius.full,
-    backgroundColor: DesignSystem.colors.oura.cardBackground,
     borderWidth: 1,
-    borderColor: DesignSystem.colors.oura.cardBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: DesignSystem.colors.neutral[200],
     ...DesignSystem.shadows.sm,
   },
-  profileIcon: {
-    fontSize: 24,
+  settingsIcon: {
+    fontSize: 18,
+    marginRight: DesignSystem.spacing[2],
+  },
+  settingsText: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.neutral[700],
   },
   section: {
     marginBottom: DesignSystem.spacing[8],
