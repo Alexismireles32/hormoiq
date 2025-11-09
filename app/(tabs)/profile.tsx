@@ -272,6 +272,21 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Help & Support</Text>
           
+          <TouchableOpacity 
+            style={styles.helpButton} 
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/help');
+            }}
+          >
+            <Text style={styles.helpIcon}>📚</Text>
+            <View style={styles.helpContent}>
+              <Text style={styles.helpTitle}>Help Center</Text>
+              <Text style={styles.helpDescription}>Browse articles and guides</Text>
+            </View>
+            <Text style={styles.helpArrow}>→</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.helpButton} onPress={handleShowTutorial}>
             <Text style={styles.helpIcon}>🧪</Text>
             <View style={styles.helpContent}>
