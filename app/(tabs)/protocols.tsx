@@ -15,6 +15,7 @@ import { Protocol, UserProtocol } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import * as Haptics from 'expo-haptics';
+import { EliAnimatedBackground } from '@/components/EliAnimatedBackground';
 
 type FilterType = 'all' | Protocol['category'];
 
@@ -152,7 +153,7 @@ export default function ProtocolsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <EliAnimatedBackground type="yellow">
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Protocols</Text>
@@ -368,7 +369,7 @@ export default function ProtocolsScreen() {
           </View>
         )}
       </Modal>
-    </View>
+    </EliAnimatedBackground>
   );
 }
 

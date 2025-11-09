@@ -5,6 +5,7 @@ import { MiniChart } from '@/components/MiniChart';
 import { DataSummary, SummaryItem } from '@/components/DataSummary';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { AnimatedTouchable } from '@/components/AnimatedTouchable';
+import { EliAnimatedBackground } from '@/components/EliAnimatedBackground';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
@@ -187,7 +188,7 @@ export default function TrackScreen() {
   const screenWidth = Dimensions.get('window').width;
 
   return (
-    <View style={styles.container}>
+    <EliAnimatedBackground type="green">
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -449,8 +450,8 @@ export default function TrackScreen() {
       </View>
 
       <View style={{ height: 40 }} />
-    </ScrollView>
-    </View>
+      </View>
+    </EliAnimatedBackground>
   );
 }
 

@@ -17,6 +17,7 @@ import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { exportUserData, deleteAllUserData, generateDataSummary } from '@/lib/dataExport';
+import { EliAnimatedBackground } from '@/components/EliAnimatedBackground';
 
 export default function ProfileScreen() {
   const { user, signOut, isAnonymous } = useAuth();
@@ -199,14 +200,16 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={DesignSystem.colors.primary[500]} />
-      </View>
+      <EliAnimatedBackground type="pink" scrollEnabled={false}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={DesignSystem.colors.primary[500]} />
+        </View>
+      </EliAnimatedBackground>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <EliAnimatedBackground type="pink">
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -446,7 +449,7 @@ export default function ProfileScreen() {
 
         <View style={{ height: DesignSystem.spacing[12] }} />
       </ScrollView>
-    </View>
+    </EliAnimatedBackground>
   );
 }
 
