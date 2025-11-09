@@ -14,6 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
 import { CircularProgress } from './ProgressBar';
 import { router } from 'expo-router';
+import { AccuracyBadge, calculateAccuracyLevel, getAccuracyRequirements } from './AccuracyBadge';
 
 interface BioAgeCardProps {
   tests: HormoneTest[];
@@ -25,6 +26,11 @@ export function BioAgeCard({ tests, chronologicalAge, userGender }: BioAgeCardPr
   const [showBreakdown, setShowBreakdown] = useState(false);
 
   const bioAgeData = calculateBioAge(tests, chronologicalAge, userGender);
+  
+  // Calculate accuracy level for progressive display
+  const uniqueDays = new Set(tests.map(t => new Date(t.timestamp).toDateString())).size;
+  const requirements = getAccuracyRequirements('bioage');
+  const accuracyLevel = calculateAccuracyLevel(tests.length, uniqueDays, requirements);
 
   const handleShare = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -139,15 +145,14 @@ export function BioAgeCard({ tests, chronologicalAge, userGender }: BioAgeCardPr
         activeOpacity={0.7}
       >
         <View style={styles.header}>
-          <Text style={styles.label}>Your BioAge</Text>
-          <View style={[styles.confidenceBadge, {
-            backgroundColor: bioAgeData.confidence === 'high' ? '#E8F4F0' : 
-                            bioAgeData.confidence === 'medium' ? '#FFF4E6' : '#FDEAEA'
-          }]}>
-            <Text style={styles.confidenceText}>
-              {bioAgeData.confidence === 'high' ? 'High ✅' :
-               bioAgeData.confidence === 'medium' ? 'Med 🟡' : 'Low ⚠️'}
-            </Text>
+          <View style={styles.labelWithBadge}>
+            <Text style={styles.label}>Your BioAge</Text>
+            <AccuracyBadge 
+              level={accuracyLevel}
+              size="sm"
+              showLabel={true}
+              testCount={tests.length}
+            />
           </View>
         </View>
 
@@ -382,6 +387,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  labelWithBadge: {
+    alignItems: 'center',
+    gap: DesignSystem.spacing[2],
   },
   label: {
     fontSize: 13,

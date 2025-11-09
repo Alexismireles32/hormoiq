@@ -14,6 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
 import { CircularProgress } from './ProgressBar';
 import { router } from 'expo-router';
+import { AccuracyBadge, calculateAccuracyLevel, getAccuracyRequirements } from './AccuracyBadge';
 
 interface ImpactCardProps {
   tests: HormoneTest[];
@@ -24,6 +25,11 @@ export function ImpactCard({ tests, userGender }: ImpactCardProps) {
   const [showDetails, setShowDetails] = useState(false);
 
   const impactData = calculateImpact(tests, userGender);
+  
+  // Calculate accuracy level for progressive display
+  const uniqueDays = new Set(tests.map(t => new Date(t.timestamp).toDateString())).size;
+  const requirements = getAccuracyRequirements('impact');
+  const accuracyLevel = calculateAccuracyLevel(tests.length, uniqueDays, requirements);
 
   const handleShare = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -141,11 +147,14 @@ export function ImpactCard({ tests, userGender }: ImpactCardProps) {
         activeOpacity={0.9}
       >
         <View style={styles.header}>
-          <Text style={styles.label}>IMPACT™ ANALYSIS</Text>
-          <View style={styles.confidenceBadge}>
-            <Text style={[styles.confidenceText, { color }]}>
-              {impactData.confidence.toUpperCase()}
-            </Text>
+          <View style={styles.labelWithBadge}>
+            <Text style={styles.label}>IMPACT™ ANALYSIS</Text>
+            <AccuracyBadge 
+              level={accuracyLevel}
+              size="sm"
+              showLabel={true}
+              testCount={tests.length}
+            />
           </View>
         </View>
 
@@ -390,6 +399,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: DesignSystem.spacing[6],
+  },
+  labelWithBadge: {
+    alignItems: 'center',
+    gap: DesignSystem.spacing[2],
   },
   label: {
     fontSize: DesignSystem.typography.fontSize.xs,
