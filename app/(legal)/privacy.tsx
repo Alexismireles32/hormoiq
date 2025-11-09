@@ -2,10 +2,12 @@ import React from 'react';
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { DesignSystem } from '@/constants/DesignSystem';
+import { AuroraBackground } from '@/components/AuroraBackground';
 
 export default function PrivacyPolicyScreen() {
   return (
-    <View style={styles.container}>
+    <AuroraBackground showRadialGradient={true}>
+      <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backText}>← Back</Text>
@@ -115,13 +117,14 @@ export default function PrivacyPolicyScreen() {
         <View style={styles.bottomSpacing} />
       </ScrollView>
     </View>
+    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.background,
+    // backgroundColor removed for Aurora
   },
   header: {
     paddingTop: 60,

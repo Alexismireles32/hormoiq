@@ -16,6 +16,7 @@ import { DesignSystem } from '@/constants/DesignSystem';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { generateTestSchedule, saveScheduleToDatabase, getPatternExplanation } from '@/lib/scheduleGenerator';
+import { AuroraBackground } from '@/components/AuroraBackground';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -301,8 +302,9 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Progress Bar */}
+    <AuroraBackground showRadialGradient={true}>
+      <View style={styles.container}>
+        {/* Progress Bar */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
           <LinearGradient
@@ -651,13 +653,14 @@ export default function OnboardingScreen() {
         </TouchableOpacity>
       </View>
     </View>
+    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.neutral[50],
+    // backgroundColor removed for Aurora
   },
   progressContainer: {
     paddingTop: DesignSystem.spacing[12],
