@@ -164,8 +164,9 @@ export default function InsightsScreen() {
   const insightsSummary = getInsightsSummary();
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <AuroraBackground showRadialGradient={true}>
+      <View style={styles.container}>
+        {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Insights</Text>
         <TouchableOpacity
@@ -304,13 +305,14 @@ export default function InsightsScreen() {
         <View style={{ height: DesignSystem.spacing[20] }} />
       </ScrollView>
     </View>
+    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.neutral[50],
+    // backgroundColor removed for Aurora
   },
   header: {
     flexDirection: 'row',

@@ -141,8 +141,9 @@ export default function InputScreen() {
   const presetValues = getPresetValues();
 
   return (
-    <View style={styles.container}>
-      {/* Back Button */}
+    <AuroraBackground showRadialGradient={true}>
+      <View style={styles.container}>
+        {/* Back Button */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={handleBack}
@@ -280,13 +281,14 @@ export default function InputScreen() {
         </TouchableOpacity>
       </View>
     </View>
+    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.neutral[50],
+    // backgroundColor removed for Aurora
   },
   backButton: {
     position: 'absolute',
