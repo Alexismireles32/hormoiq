@@ -26,10 +26,37 @@ export interface UserProfile {
   age: number | null; // Added: Current age for BioAge calculations
   gender: 'male' | 'female' | 'other' | null;
   goals: string[] | null;
+  on_hormone_therapy: boolean;
+  hormone_therapy_unknown: boolean;
   onboarding_completed: boolean;
   is_admin: boolean; // Added: Admin access flag
+  // Test Kit & Scheduling fields
+  kit_received_date: string | null; // ISO date string
+  test_schedule_pattern: 'A' | 'B' | 'custom' | null;
+  test_schedule_start_week: number;
+  custom_test_days: number[] | null; // [1,3,5] = Mon/Wed/Fri
+  tests_remaining: number;
+  kit_completion_date: string | null; // ISO date string
   created_at: string;
   updated_at: string;
+}
+
+// Test Schedule Event
+export interface TestScheduleEvent {
+  id: string;
+  user_id: string;
+  scheduled_date: string; // ISO date string
+  hormone_type: 'cortisol' | 'testosterone' | 'dhea' | 'progesterone';
+  week_number: number; // 1-4
+  day_of_week: number; // 0-6 (0=Sunday)
+  test_number: number; // 1-12
+  completed: boolean;
+  completed_at: string | null;
+  test_id: string | null; // Links to hormone_tests.id when completed
+  skipped: boolean;
+  skipped_reason: string | null;
+  reminder_sent: boolean;
+  created_at: string;
 }
 
 // Hormone Test

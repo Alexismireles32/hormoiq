@@ -15,6 +15,13 @@ CREATE TABLE IF NOT EXISTS users (
   hormone_therapy_unknown BOOLEAN DEFAULT false, -- User not sure about therapy status
   onboarding_completed BOOLEAN DEFAULT false,
   is_admin BOOLEAN DEFAULT false, -- Admin access flag
+  -- Test Kit & Scheduling fields
+  kit_received_date DATE, -- When user received their 12-test kit
+  test_schedule_pattern TEXT CHECK (test_schedule_pattern IN ('A', 'B', 'custom')), -- A: M/W/F->T/Th/S, B: T/Th/S->M/W/F
+  test_schedule_start_week INTEGER DEFAULT 1, -- Which week pattern they're on
+  custom_test_days INTEGER[], -- For custom schedules: [1,3,5] = Mon/Wed/Fri
+  tests_remaining INTEGER DEFAULT 12, -- Countdown from 12 tests
+  kit_completion_date DATE, -- When they finished all 12 tests
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -163,6 +170,32 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 CREATE INDEX IF NOT EXISTS idx_chat_messages_user ON chat_messages(user_id, timestamp DESC);
 
 -- ============================================
+-- TEST SCHEDULE EVENTS TABLE (12-test kit scheduling)
+-- ============================================
+CREATE TABLE IF NOT EXISTS test_schedule_events (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  scheduled_date DATE NOT NULL,
+  hormone_type TEXT NOT NULL CHECK (hormone_type IN ('cortisol', 'testosterone', 'dhea', 'progesterone')),
+  week_number INTEGER NOT NULL CHECK (week_number BETWEEN 1 AND 4), -- 4-week kit
+  day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6), -- 0=Sun, 6=Sat
+  test_number INTEGER NOT NULL CHECK (test_number BETWEEN 1 AND 12), -- 1-12 for the kit
+  completed BOOLEAN DEFAULT false,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  test_id UUID REFERENCES hormone_tests(id), -- Link to actual test when completed
+  skipped BOOLEAN DEFAULT false, -- User intentionally skipped
+  skipped_reason TEXT,
+  reminder_sent BOOLEAN DEFAULT false, -- Track if reminder was sent
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_schedule_events_user ON test_schedule_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_schedule_events_date ON test_schedule_events(scheduled_date);
+CREATE INDEX IF NOT EXISTS idx_schedule_events_user_date ON test_schedule_events(user_id, scheduled_date);
+CREATE INDEX IF NOT EXISTS idx_schedule_events_pending ON test_schedule_events(user_id, completed) WHERE completed = false;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_schedule_events_unique ON test_schedule_events(user_id, scheduled_date, hormone_type);
+
+-- ============================================
 -- USER PATTERNS TABLE (for smart defaults)
 -- ============================================
 CREATE TABLE IF NOT EXISTS user_patterns (
@@ -189,6 +222,7 @@ ALTER TABLE user_protocols ENABLE ROW LEVEL SECURITY;
 ALTER TABLE protocol_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE impact_analyses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE test_schedule_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_patterns ENABLE ROW LEVEL SECURITY;
 
 -- Users table policies
@@ -308,6 +342,19 @@ CREATE POLICY "Users can delete own protocol logs" ON protocol_logs
       AND user_protocols.user_id = auth.uid()
     )
   );
+
+-- Test schedule events policies
+CREATE POLICY "Users can view own schedule" ON test_schedule_events
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own schedule" ON test_schedule_events
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own schedule" ON test_schedule_events
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own schedule" ON test_schedule_events
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- ============================================
 -- FUNCTIONS FOR AUTOMATIC TIMESTAMPS
