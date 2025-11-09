@@ -29,6 +29,7 @@ import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import HeroCard from '@/components/HeroCard';
+import QuickActions from '@/components/QuickActions';
 import { generateHeroInsight, HeroInsight } from '@/utils/heroInsights';
 import { generateProactiveMessage } from '@/utils/proactiveAI';
 import { calculateStreak } from '@/utils/streakCalculator';
@@ -311,7 +312,7 @@ export default function DashboardScreen() {
           <RNView style={{ flex: 1 }}>
             <Text style={styles.greeting}>{getGreeting()}</Text>
             <RNView style={styles.userRow}>
-              <Text style={styles.appName}>HormoIQ</Text>
+              <Text style={styles.appName}>{user?.user_metadata?.name || user?.email?.split('@')[0] || 'User'}</Text>
               {streak > 0 && (
                 <RNView style={styles.streakBadge}>
                   <Text style={styles.streakText}>🔥 {streak}-day streak</Text>
@@ -326,6 +327,9 @@ export default function DashboardScreen() {
             <Text style={styles.profileIcon}>👤</Text>
           </TouchableOpacity>
         </RNView>
+
+        {/* Quick Actions (100/100 UX Requirement) */}
+        <QuickActions />
 
         {/* Hero Card - Today's Focus (100/100 UX Enhancement) */}
         {heroInsight.insight && (
