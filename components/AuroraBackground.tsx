@@ -1,215 +1,125 @@
 /**
- * Aurora Animated Background Component
- * Beautiful animated gradient background for React Native
- * Inspired by Aceternity UI Aurora effect, adapted for mobile
+ * Aurora Background - Aceternity UI Style
+ * Recreates the distinctive aurora shimmer effect for React Native
+ * Based on 21st.dev aurora-background component
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, View, ViewStyle } from 'react-native';
+import { Animated, Easing, StyleSheet, View, ViewStyle, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { DesignSystem } from '@/constants/DesignSystem';
 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 interface AuroraBackgroundProps {
   children?: React.ReactNode;
-  colors?: string[];
-  intensity?: 'low' | 'medium' | 'high';
-  speed?: 'slow' | 'medium' | 'fast';
+  showRadialGradient?: boolean;
   style?: ViewStyle;
 }
 
 export function AuroraBackground({
   children,
-  colors = [
-    DesignSystem.colors.primary[100],
-    DesignSystem.colors.primary[200],
-    DesignSystem.colors.primary[300],
-    DesignSystem.colors.primary[400],
-  ],
-  intensity = 'medium',
-  speed = 'medium',
+  showRadialGradient = true,
   style,
 }: AuroraBackgroundProps) {
-  // Animation values for multiple moving gradients
-  const anim1 = useRef(new Animated.Value(0)).current;
-  const anim2 = useRef(new Animated.Value(0)).current;
-  const anim3 = useRef(new Animated.Value(0)).current;
-
-  // Speed configuration
-  const speedDuration = {
-    slow: 30000,
-    medium: 20000,
-    fast: 10000,
-  };
-
-  // Intensity (opacity) configuration
-  const intensityOpacity = {
-    low: 0.2,
-    medium: 0.35,
-    high: 0.5,
-  };
+  // Animation values for the aurora effect
+  const auroraAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Create infinite looping animations for each gradient blob
-    const createAnimation = (animValue: Animated.Value, duration: number) => {
-      return Animated.loop(
-        Animated.sequence([
-          Animated.timing(animValue, {
-            toValue: 1,
-            duration,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(animValue, {
-            toValue: 0,
-            duration,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ])
-      );
-    };
+    // Create the signature 60s aurora animation (like the original)
+    const animation = Animated.loop(
+      Animated.timing(auroraAnim, {
+        toValue: 1,
+        duration: 60000, // 60 seconds like the original
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
 
-    const baseDuration = speedDuration[speed];
-    
-    // Start animations with different durations for natural movement
-    const animation1 = createAnimation(anim1, baseDuration);
-    const animation2 = createAnimation(anim2, baseDuration * 1.3);
-    const animation3 = createAnimation(anim3, baseDuration * 1.7);
-
-    animation1.start();
-    animation2.start();
-    animation3.start();
+    animation.start();
 
     return () => {
-      animation1.stop();
-      animation2.stop();
-      animation3.stop();
+      animation.stop();
     };
-  }, [speed]);
+  }, []);
 
-  // Interpolate animation values for movement
-  const blob1TranslateX = anim1.interpolate({
+  // Interpolate for the aurora movement (50% to 350% background position)
+  const translateX = auroraAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [-100, 100],
+    outputRange: [0, SCREEN_WIDTH * 3], // Simulate 300% background-size movement
   });
-  const blob1TranslateY = anim1.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-50, 50],
-  });
-  const blob1Scale = anim1.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [1, 1.3, 1],
-  });
-
-  const blob2TranslateX = anim2.interpolate({
-    inputRange: [0, 1],
-    outputRange: [100, -100],
-  });
-  const blob2TranslateY = anim2.interpolate({
-    inputRange: [0, 1],
-    outputRange: [50, -50],
-  });
-  const blob2Scale = anim2.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [1, 1.4, 1],
-  });
-
-  const blob3TranslateX = anim3.interpolate({
-    inputRange: [0, 1],
-    outputRange: [50, -50],
-  });
-  const blob3TranslateY = anim3.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-80, 80],
-  });
-  const blob3Scale = anim3.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [1, 1.2, 1],
-  });
-
-  const opacity = intensityOpacity[intensity];
 
   return (
     <View style={[styles.container, style]}>
-      {/* Base gradient overlay */}
-      <LinearGradient
-        colors={[colors[0], colors[1], colors[2]]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-      />
+      {/* Base background - subtle off-white/gray */}
+      <View style={styles.baseBackground} />
 
-      {/* Animated gradient blob 1 - Top Left */}
+      {/* Aurora shimmer layer 1 - Main gradient stripes */}
       <Animated.View
         style={[
-          styles.blob,
-          styles.blobTopLeft,
+          styles.auroraLayer,
           {
-            opacity,
-            transform: [
-              { translateX: blob1TranslateX },
-              { translateY: blob1TranslateY },
-              { scale: blob1Scale },
-            ],
+            transform: [{ translateX }],
           },
         ]}
       >
         <LinearGradient
-          colors={[colors[0], colors[1], 'transparent']}
+          colors={[
+            'transparent',
+            'transparent',
+            'rgba(96, 165, 250, 0.15)',  // blue-400
+            'rgba(165, 180, 252, 0.12)', // indigo-300
+            'rgba(147, 197, 253, 0.15)', // blue-300
+            'rgba(221, 214, 254, 0.10)', // violet-200
+            'rgba(96, 165, 250, 0.15)',  // blue-400
+            'transparent',
+            'transparent',
+          ]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.blobGradient}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradient}
         />
       </Animated.View>
 
-      {/* Animated gradient blob 2 - Bottom Right */}
+      {/* Aurora shimmer layer 2 - Secondary effect (mix-blend-difference simulation) */}
       <Animated.View
         style={[
-          styles.blob,
-          styles.blobBottomRight,
+          styles.auroraLayerSecondary,
           {
-            opacity,
-            transform: [
-              { translateX: blob2TranslateX },
-              { translateY: blob2TranslateY },
-              { scale: blob2Scale },
-            ],
+            transform: [{ translateX: Animated.multiply(translateX, 0.7) }],
           },
         ]}
       >
         <LinearGradient
-          colors={[colors[2], colors[3], 'transparent']}
+          colors={[
+            'transparent',
+            'rgba(139, 92, 246, 0.08)', // violet-500
+            'rgba(167, 139, 250, 0.10)', // violet-400
+            'rgba(196, 181, 253, 0.08)', // violet-300
+            'transparent',
+          ]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.blobGradient}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradient}
         />
       </Animated.View>
 
-      {/* Animated gradient blob 3 - Center */}
-      <Animated.View
-        style={[
-          styles.blob,
-          styles.blobCenter,
-          {
-            opacity: opacity * 0.8,
-            transform: [
-              { translateX: blob3TranslateX },
-              { translateY: blob3TranslateY },
-              { scale: blob3Scale },
-            ],
-          },
-        ]}
-      >
-        <LinearGradient
-          colors={[colors[1], colors[2], 'transparent']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.blobGradient}
-        />
-      </Animated.View>
+      {/* Radial gradient mask (optional - for the ellipse effect) */}
+      {showRadialGradient && (
+        <View style={styles.radialMask} pointerEvents="none">
+          <LinearGradient
+            colors={['rgba(249, 250, 251, 0)', 'rgba(249, 250, 251, 0.3)', 'rgba(249, 250, 251, 0.7)']}
+            start={{ x: 1, y: 0 }}
+            end={{ x: 0, y: 0.5 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+        </View>
+      )}
 
-      {/* Content */}
-      <View style={styles.content}>{children}</View>
+      {/* Content layer */}
+      <View style={styles.content} pointerEvents="box-none">
+        {children}
+      </View>
     </View>
   );
 }
@@ -218,33 +128,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
-    backgroundColor: DesignSystem.colors.background,
   },
-  blob: {
+  baseBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#F9FAFB', // bg-zinc-50 equivalent (off-white)
+  },
+  auroraLayer: {
     position: 'absolute',
-    width: 400,
-    height: 400,
-    borderRadius: 200,
+    top: -10,
+    left: -SCREEN_WIDTH * 1.5,
+    right: -SCREEN_WIDTH * 1.5,
+    bottom: -10,
+    width: SCREEN_WIDTH * 4, // 300% size for movement
+    height: SCREEN_HEIGHT + 20,
+    opacity: 0.5, // Match original opacity
   },
-  blobTopLeft: {
-    top: -150,
-    left: -150,
+  auroraLayerSecondary: {
+    position: 'absolute',
+    top: -10,
+    left: -SCREEN_WIDTH * 1.5,
+    right: -SCREEN_WIDTH * 1.5,
+    bottom: -10,
+    width: SCREEN_WIDTH * 4,
+    height: SCREEN_HEIGHT + 20,
+    opacity: 0.3,
   },
-  blobBottomRight: {
-    bottom: -150,
-    right: -150,
-  },
-  blobCenter: {
-    top: '35%',
-    left: '25%',
-  },
-  blobGradient: {
+  gradient: {
     flex: 1,
-    borderRadius: 200,
+  },
+  radialMask: {
+    ...StyleSheet.absoluteFillObject,
+    pointerEvents: 'none',
   },
   content: {
     flex: 1,
     zIndex: 10,
   },
 });
-
