@@ -58,10 +58,12 @@ export default function OnboardingScreen() {
     setLoading(true);
 
     try {
-      // First, check if user exists (maybeSingle doesn't throw error if not found)
+      console.log('Starting onboarding for user:', user.id, 'email:', user.email);
+      
+      // First, check if user exists by ID
       const { data: existingUser, error: checkError } = await supabase
         .from('users')
-        .select('id')
+        .select('id, email')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -69,6 +71,17 @@ export default function OnboardingScreen() {
       if (checkError && checkError.code !== 'PGRST116') {
         console.error('Error checking user:', checkError);
       }
+
+      console.log('Existing user check:', existingUser ? 'FOUND' : 'NOT FOUND');
+
+      // Also check if email exists (different user ID with same email - edge case)
+      const { data: emailExists } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('email', user.email)
+        .maybeSingle();
+
+      console.log('Email exists check:', emailExists);
 
       const userData = {
         id: user.id,
@@ -81,13 +94,14 @@ export default function OnboardingScreen() {
       };
 
       let result;
-      if (existingUser) {
-        // Update existing user
-        console.log('Updating existing user...');
+      if (existingUser || emailExists) {
+        // Update existing user (use the ID we found)
+        const targetId = existingUser?.id || emailExists?.id;
+        console.log('Updating existing user with ID:', targetId);
         result = await supabase
           .from('users')
           .update(userData)
-          .eq('id', user.id);
+          .eq('id', targetId);
       } else {
         // Insert new user
         console.log('Inserting new user...');
