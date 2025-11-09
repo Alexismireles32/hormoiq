@@ -11,6 +11,9 @@ import {
 import { calculateBioAge, getBioAgeColor, getBioAgeMessage } from '@/lib/bioage';
 import { HormoneTest } from '@/types';
 import * as Haptics from 'expo-haptics';
+import { DesignSystem } from '@/constants/DesignSystem';
+import { CircularProgress } from './ProgressBar';
+import { router } from 'expo-router';
 
 interface BioAgeCardProps {
   tests: HormoneTest[];
@@ -40,29 +43,83 @@ export function BioAgeCard({ tests, chronologicalAge, userGender }: BioAgeCardPr
     setShowBreakdown(true);
   };
 
-  // Locked state
+  // Enhanced locked state with progress
   if (!bioAgeData.can_calculate) {
+    const requiredTests = 10;
+    const progress = (tests.length / requiredTests) * 100;
+    
+    // Check if they have enough tests over enough days
+    const uniqueDays = new Set(
+      tests.map(test => new Date(test.timestamp).toDateString())
+    ).size;
+    const needsMoreDays = uniqueDays < 7;
+
     return (
-      <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          router.push('/test/input');
+        }}
+        activeOpacity={0.8}
+      >
         <View style={styles.lockedContainer}>
-          <Text style={styles.lockIcon}>🔒</Text>
-          <Text style={styles.lockedTitle}>BioAge Locked</Text>
+          {/* Progress Ring */}
+          <CircularProgress
+            progress={progress}
+            size={140}
+            strokeWidth={10}
+            color={DesignSystem.colors.primary[500]}
+            backgroundColor={DesignSystem.colors.neutral[200]}
+            showPercentage={false}
+          >
+            <Text style={styles.lockIcon}>🔒</Text>
+          </CircularProgress>
+
+          <Text style={styles.lockedTitle}>BIOAGE™ Locked</Text>
+          <Text style={styles.lockedProgress}>
+            {tests.length} of {requiredTests} tests
+          </Text>
           <Text style={styles.lockedSubtitle}>
-            {bioAgeData.tests_needed} more test{bioAgeData.tests_needed !== 1 ? 's' : ''} needed over 2+ weeks
+            {needsMoreDays 
+              ? `Need tests over ${7 - uniqueDays} more days (${uniqueDays}/7 days)`
+              : `${bioAgeData.tests_needed} more test${bioAgeData.tests_needed !== 1 ? 's' : ''} needed`
+            }
           </Text>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { width: `${(tests.length / 10) * 100}%` }
-              ]} 
-            />
+
+          {/* What You'll Get Preview */}
+          <View style={styles.previewSection}>
+            <Text style={styles.previewTitle}>You'll unlock:</Text>
+            <View style={styles.previewItem}>
+              <Text style={styles.previewIcon}>🧬</Text>
+              <Text style={styles.previewText}>Your biological age estimate</Text>
+            </View>
+            <View style={styles.previewItem}>
+              <Text style={styles.previewIcon}>📊</Text>
+              <Text style={styles.previewText}>Age comparison vs chronological</Text>
+            </View>
+            <View style={styles.previewItem}>
+              <Text style={styles.previewIcon}>📈</Text>
+              <Text style={styles.previewText}>Track aging trends over time</Text>
+            </View>
+            <View style={styles.previewItem}>
+              <Text style={styles.previewIcon}>🎯</Text>
+              <Text style={styles.previewText}>Hormone optimization insights</Text>
+            </View>
           </View>
-          <Text style={styles.progressText}>
-            {tests.length} / 10 tests
-          </Text>
+
+          <TouchableOpacity
+            style={styles.unlockButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/test/input');
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.unlockButtonText}>Log a Test</Text>
+          </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   }
 
@@ -232,24 +289,77 @@ const styles = StyleSheet.create({
   },
   lockedContainer: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: DesignSystem.spacing[5],
   },
   lockIcon: {
-    fontSize: 48,
-    marginBottom: 16,
+    fontSize: DesignSystem.iconSize['2xl'],
+    marginBottom: DesignSystem.spacing[4],
   },
   lockedTitle: {
-    fontSize: 20,
-    fontWeight: '500',  // Medium weight
-    marginBottom: 8,
-    color: '#1F2937',
+    fontSize: DesignSystem.typography.fontSize.xl,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    marginBottom: DesignSystem.spacing[2],
+    color: DesignSystem.colors.neutral[900],
+  },
+  lockedProgress: {
+    fontSize: DesignSystem.typography.fontSize.lg,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.primary[600],
+    marginBottom: DesignSystem.spacing[2],
+    marginTop: DesignSystem.spacing[4],
   },
   lockedSubtitle: {
-    fontSize: 14,
-    fontWeight: '300',  // Light weight
-    color: '#6B7280',
-    marginBottom: 20,
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[600],
+    marginBottom: DesignSystem.spacing[3],
     textAlign: 'center',
+    lineHeight: DesignSystem.typography.fontSize.sm * 1.6,
+  },
+  previewSection: {
+    width: '100%',
+    backgroundColor: DesignSystem.colors.oura.subtleBackground,
+    borderRadius: DesignSystem.radius.lg,
+    padding: DesignSystem.spacing[4],
+    marginTop: DesignSystem.spacing[6],
+    gap: DesignSystem.spacing[3],
+  },
+  previewTitle: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.neutral[900],
+    marginBottom: DesignSystem.spacing[2],
+  },
+  previewItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: DesignSystem.spacing[2],
+  },
+  previewIcon: {
+    fontSize: DesignSystem.iconSize.sm,
+  },
+  previewText: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[700],
+    flex: 1,
+  },
+  unlockButton: {
+    backgroundColor: DesignSystem.colors.primary[500],
+    paddingVertical: DesignSystem.spacing[4],
+    paddingHorizontal: DesignSystem.spacing[8],
+    borderRadius: DesignSystem.radius.full,
+    marginTop: DesignSystem.spacing[6],
+    minHeight: DesignSystem.touchTarget.comfortable,
+    minWidth: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...DesignSystem.shadows.md,
+  },
+  unlockButtonText: {
+    fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.neutral[0],
   },
   progressBar: {
     width: '100%',
