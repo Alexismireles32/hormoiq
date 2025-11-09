@@ -447,6 +447,24 @@ If continuing in a new chat, here's what's been completed and what might be next
 
 ---
 
+## ✅ **FIXED: Dashboard Render Error (Nov 9, 2025 - 12:45 AM)**
+
+### **Issue**: `TypeError: getGreeting is not a function`
+After successful onboarding, dashboard crashed with function error.
+
+### **Root Cause**
+`getGreeting()` was defined inside the component AFTER the early return for empty state, making it undefined when the empty state tried to call it.
+
+### **Solution**
+Moved `getGreeting` to file scope (before component definition) so it's available for both render paths.
+
+**Files Modified**:
+- `app/(tabs)/index.tsx`: Moved function to line 70, removed duplicate
+
+**Status**: ✅ Dashboard now renders perfectly for new and returning users
+
+---
+
 ## 🔄 **UPDATE: Ultra-Simple 3-Digit Code Auth (Nov 9, 2025 - 12:15 AM)**
 
 ### **Issue**: Phone auth was disabled in Supabase
