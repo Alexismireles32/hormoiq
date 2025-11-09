@@ -70,13 +70,33 @@ export const DesignSystem = {
       progesterone: '#A8B5D4',   // Soft lavender
     },
     
-    // Solid Colors (No Gradients - Oura style)
+    // Vibrant Gradients for Interactive Dashboard
     gradients: {
-      primary: ['#9B8DC7', '#9B8DC7'],
-      success: ['#7FB5A5', '#7FB5A5'],
-      sunset: ['#D4A574', '#D4A574'],
-      ocean: ['#8E9FBC', '#8E9FBC'],
-      rainbow: ['#9B8DC7', '#9B8DC7'],
+      success: ['#10b981', '#059669', '#047857'],     // Green gradient
+      warning: ['#fbbf24', '#f59e0b', '#d97706'],     // Amber gradient
+      danger: ['#f87171', '#ef4444', '#dc2626'],      // Red gradient
+      primary: ['#8b5cf6', '#7c3aed', '#6d28d9'],     // Purple gradient
+      ocean: ['#06b6d4', '#0891b2', '#0e7490'],       // Cyan gradient
+      sunset: ['#fb923c', '#f97316', '#ea580c'],      // Orange gradient
+      lavender: ['#9B8DC7', '#8A7BB8', '#786BA3'],    // Brand lavender
+      emerald: ['#34d399', '#10b981', '#059669'],     // Emerald gradient
+      rose: ['#fb7185', '#f43f5e', '#e11d48'],        // Rose gradient
+      sky: ['#7dd3fc', '#38bdf8', '#0ea5e9'],         // Sky gradient
+    },
+    
+    // Celebration colors
+    celebration: {
+      confetti: ['#f472b6', '#fb7185', '#c084fc', '#a78bfa', '#60a5fa', '#34d399'],
+      sparkle: '#fbbf24',
+      glow: 'rgba(251, 191, 36, 0.4)',
+    },
+    
+    // Chart colors (keeping existing for consistency)
+    charts: {
+      cortisol: '#8E9FBC',
+      testosterone: '#C4A6A6',
+      dhea: '#D4A574',
+      progesterone: '#A8B5D4',
     },
     
     // Oura-specific Design Tokens

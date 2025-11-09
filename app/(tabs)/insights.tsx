@@ -1,38 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  RefreshControl,
-  Dimensions,
-} from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { ReadyCard } from '@/components/ReadyCard';
-import { BioAgeCard } from '@/components/BioAgeCard';
-import { ImpactCard } from '@/components/ImpactCard';
-import { DataSummary, SummaryItem } from '@/components/DataSummary';
-import { AnimatedCard } from '@/components/AnimatedCard';
-import { AnimatedTouchable } from '@/components/AnimatedTouchable';
-import { SkeletonLoader, SkeletonScoreCard } from '@/components/SkeletonLoader';
-import { EmptyStateIllustration } from '@/components/EmptyStateIllustration';
 import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
 import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
 
-const { width } = Dimensions.get('window');
+// New Components
+import { InsightsDashboardGrid } from '@/components/InsightsDashboardGrid';
+import { AnimatedStatCard } from '@/components/AnimatedStatCard';
+import { InteractiveHormoneChart } from '@/components/InteractiveHormoneChart';
+import { FlippableReadyCard } from '@/components/FlippableReadyCard';
+import { FlippableBioAgeCard } from '@/components/FlippableBioAgeCard';
+import { FlippableImpactCard } from '@/components/FlippableImpactCard';
+import { FloatingActionButton } from '@/components/FloatingActionButton';
+import { GradientBackground } from '@/components/GradientBackground';
+import { CelebrationEffect } from '@/components/CelebrationEffect';
+import { SkeletonScoreCard } from '@/components/SkeletonLoader';
+import { EmptyStateIllustration } from '@/components/EmptyStateIllustration';
 
 export default function InsightsScreen() {
   const { user } = useAuth();
   const [tests, setTests] = useState<HormoneTest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [userAge, setUserAge] = useState(30);
   const [userGender, setUserGender] = useState<'male' | 'female' | 'other'>('male');
   const [activeProtocols, setActiveProtocols] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationType, setCelebrationType] = useState<'confetti' | 'sparkle' | 'glow' | 'badge'>('confetti');
 
   useEffect(() => {
     loadData();
@@ -50,7 +46,11 @@ export default function InsightsScreen() {
         .order('timestamp', { ascending: false });
 
       if (testsError) throw testsError;
-      setTests((testsData as HormoneTest[]) || []);
+      const fetchedTests = (testsData as HormoneTest[]) || [];
+      setTests(fetchedTests);
+
+      // Check for celebration triggers
+      checkCelebrations(fetchedTests);
 
       // Load user profile
       const { data: profileData, error: profileError } = await supabase
@@ -79,43 +79,90 @@ export default function InsightsScreen() {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadData();
+  const checkCelebrations = (tests: HormoneTest[]) => {
+    // Check for achievements
+    if (tests.length === 1) {
+      // First test logged
+      triggerCelebration('sparkle');
+    } else if (tests.length === 12) {
+      // All 12 tests completed
+      triggerCelebration('confetti');
+    }
+    
+    // Check 7-day streak
+    const last7Days = tests.filter((test) => {
+      const testDate = new Date(test.timestamp);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return testDate >= weekAgo;
+    });
+    
+    if (last7Days.length >= 7) {
+      triggerCelebration('badge');
+    }
   };
 
-  const getInsightsSummary = (): SummaryItem[] => {
+  const triggerCelebration = (type: 'confetti' | 'sparkle' | 'glow' | 'badge') => {
+    setCelebrationType(type);
+    setShowCelebration(true);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    
+    // Auto-hide after animation
+    setTimeout(() => {
+      setShowCelebration(false);
+    }, 3000);
+  };
+
+  const handleRefresh = async () => {
+    await loadData();
+  };
+
+  const getStats = () => {
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const testsThisWeek = tests.filter(t => new Date(t.timestamp) >= oneWeekAgo).length;
+    const testsThisWeek = tests.filter((t) => new Date(t.timestamp) >= oneWeekAgo).length;
 
-    const uniqueHormones = new Set(tests.map(t => t.hormone_type)).size;
+    // Calculate streak
+    const sortedTests = [...tests].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    let streak = 0;
+    let currentDate = new Date();
+    for (const test of sortedTests) {
+      const testDate = new Date(test.timestamp);
+      const daysDiff = Math.floor(
+        (currentDate.getTime() - testDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      if (daysDiff <= streak + 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
 
-    return [
-      {
-        label: 'Tests This Week',
-        value: testsThisWeek,
-        icon: '📊',
-        trend: testsThisWeek >= 3 ? 'up' : testsThisWeek > 0 ? 'neutral' : 'down',
-        subtitle: testsThisWeek >= 3 ? 'On track!' : 'Keep going',
-      },
-      {
-        label: 'Hormones Tracked',
-        value: uniqueHormones,
-        icon: '🧪',
-        subtitle: 'of 3 total',
-      },
-      {
-        label: 'Active Protocols',
-        value: activeProtocols,
-        icon: '📋',
-        subtitle: activeProtocols > 0 ? 'In progress' : 'Start one',
-      },
-    ];
+    // Calculate completion rate
+    const totalExpected = 12;
+    const completionRate = Math.round((tests.length / totalExpected) * 100);
+
+    // Unique hormones tracked
+    const uniqueHormones = new Set(tests.map((t) => t.hormone_type)).size;
+
+    // Days active
+    const firstTestDate = sortedTests.length > 0 ? new Date(sortedTests[sortedTests.length - 1].timestamp) : new Date();
+    const daysActive = Math.floor((now.getTime() - firstTestDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    return {
+      testsThisWeek,
+      totalTests: tests.length,
+      streak,
+      completionRate,
+      uniqueHormones,
+      activeProtocols,
+      daysActive,
+    };
   };
 
   if (loading) {
@@ -124,14 +171,11 @@ export default function InsightsScreen() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Insights</Text>
         </View>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.contentContainer}
-        >
+        <View style={styles.loadingContainer}>
           <SkeletonScoreCard />
           <SkeletonScoreCard />
           <SkeletonScoreCard />
-        </ScrollView>
+        </View>
       </View>
     );
   }
@@ -139,13 +183,14 @@ export default function InsightsScreen() {
   if (tests.length === 0) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Insights</Text>
-        </View>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.contentContainer}
+        <GradientBackground
+          colors={DesignSystem.colors.gradients.lavender}
+          style={styles.headerGradient}
         >
+          <Text style={styles.headerTitleWhite}>Insights</Text>
+          <Text style={styles.headerSubtitle}>Your wellness dashboard</Text>
+        </GradientBackground>
+        <View style={styles.emptyContainer}>
           <EmptyStateIllustration
             type="no_insights"
             title="No Insights Yet"
@@ -155,153 +200,167 @@ export default function InsightsScreen() {
             secondaryActionLabel="Learn More"
             onSecondaryActionPress={() => router.push('/help')}
           />
-        </ScrollView>
+        </View>
       </View>
     );
   }
 
-  const insightsSummary = getInsightsSummary();
+  const stats = getStats();
+
+  // Build grid items
+  const gridItems = [
+    // Stat cards (2 columns)
+    {
+      id: 'stat-tests',
+      component: (
+        <AnimatedStatCard
+          type="tests"
+          value={stats.totalTests}
+          label="Total Tests"
+          icon="🧪"
+          trend={stats.testsThisWeek >= 3 ? 'up' : 'neutral'}
+          trendValue={`${stats.testsThisWeek} this week`}
+          gradient={DesignSystem.colors.gradients.ocean}
+        />
+      ),
+      span: 1 as const,
+    },
+    {
+      id: 'stat-streak',
+      component: (
+        <AnimatedStatCard
+          type="streak"
+          value={stats.streak}
+          label="Day Streak"
+          icon="🔥"
+          trend={stats.streak >= 7 ? 'up' : stats.streak > 0 ? 'neutral' : 'down'}
+          gradient={DesignSystem.colors.gradients.sunset}
+        />
+      ),
+      span: 1 as const,
+    },
+    // Interactive chart (full width)
+    {
+      id: 'chart',
+      component: <InteractiveHormoneChart tests={tests} selectedHormone="cortisol" />,
+      span: 2 as const,
+    },
+    // Flippable cards (2 columns each, taking up 1/2 width)
+    {
+      id: 'ready-card',
+      component: <FlippableReadyCard tests={tests} userGender={userGender} />,
+      span: 1 as const,
+    },
+    {
+      id: 'bioage-card',
+      component: (
+        <FlippableBioAgeCard tests={tests} chronologicalAge={userAge} userGender={userGender} />
+      ),
+      span: 1 as const,
+    },
+    // More stat cards
+    {
+      id: 'stat-completion',
+      component: (
+        <AnimatedStatCard
+          type="completion"
+          value={stats.completionRate}
+          label="Completion Rate"
+          icon="🎯"
+          trend={stats.completionRate >= 75 ? 'up' : 'neutral'}
+          gradient={DesignSystem.colors.gradients.emerald}
+        />
+      ),
+      span: 1 as const,
+    },
+    {
+      id: 'stat-hormones',
+      component: (
+        <AnimatedStatCard
+          type="hormones"
+          value={stats.uniqueHormones}
+          label="Hormones Tracked"
+          icon="💧"
+          gradient={DesignSystem.colors.gradients.primary}
+        />
+      ),
+      span: 1 as const,
+    },
+    // Impact card (full width)
+    {
+      id: 'impact-card',
+      component: <FlippableImpactCard tests={tests} userGender={userGender} />,
+      span: 2 as const,
+    },
+    // Final stat cards
+    {
+      id: 'stat-protocols',
+      component: (
+        <AnimatedStatCard
+          type="protocols"
+          value={stats.activeProtocols}
+          label="Active Protocols"
+          icon="📋"
+          gradient={DesignSystem.colors.gradients.rose}
+          onPress={() => router.push('/(tabs)/protocols')}
+        />
+      ),
+      span: 1 as const,
+    },
+    {
+      id: 'stat-days',
+      component: (
+        <AnimatedStatCard
+          type="days"
+          value={stats.daysActive}
+          label="Days Active"
+          icon="📅"
+          gradient={DesignSystem.colors.gradients.sky}
+        />
+      ),
+      span: 1 as const,
+    },
+  ];
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Insights</Text>
-        <TouchableOpacity
-          style={styles.helpButton}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push('/help');
-          }}
-        >
-          <Text style={styles.helpIcon}>?</Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        showsVerticalScrollIndicator={false}
+      {/* Animated Header */}
+      <GradientBackground
+        colors={DesignSystem.colors.gradients.lavender}
+        animated={true}
+        style={styles.headerGradient}
       >
-        {/* Quick Summary */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Week</Text>
-          <DataSummary items={insightsSummary} columns={3} />
-        </View>
+        <Text style={styles.headerTitleWhite}>Insights</Text>
+        <Text style={styles.headerSubtitle}>Your wellness dashboard</Text>
+      </GradientBackground>
 
-        {/* Core Metrics Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Core Metrics</Text>
-          <Text style={styles.sectionSubtitle}>
-            Track your key wellness indicators
-          </Text>
+      {/* Grid Dashboard */}
+      <InsightsDashboardGrid
+        items={gridItems}
+        onRefresh={handleRefresh}
+        columnGap={DesignSystem.spacing[4]}
+        rowGap={DesignSystem.spacing[4]}
+      />
 
-          <AnimatedCard index={0} style={styles.cardWrapper}>
-            <ReadyCard tests={tests} userGender={userGender} />
-          </AnimatedCard>
+      {/* Floating Action Button */}
+      <FloatingActionButton
+        icon="+"
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          router.push('/test/input');
+        }}
+        position="bottom-right"
+        gradient={DesignSystem.colors.gradients.primary}
+      />
 
-          <AnimatedCard index={1} style={styles.cardWrapper}>
-            <BioAgeCard
-              tests={tests}
-              chronologicalAge={userAge}
-              userGender={userGender}
-            />
-          </AnimatedCard>
-
-          <AnimatedCard index={2} style={styles.cardWrapper}>
-            <ImpactCard tests={tests} userGender={userGender} />
-          </AnimatedCard>
-        </View>
-
-        {/* Active Protocols */}
-        {activeProtocols > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Active Protocols</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push('/(tabs)/protocols');
-                }}
-              >
-                <Text style={styles.seeAllText}>See All →</Text>
-              </TouchableOpacity>
-            </View>
-            <AnimatedCard index={3} style={styles.protocolsCard}>
-              <AnimatedTouchable
-                style={styles.protocolsButton}
-                onPress={() => router.push('/(tabs)/protocols')}
-              >
-                <View style={styles.protocolsIcon}>
-                  <Text style={styles.protocolsIconText}>📋</Text>
-                </View>
-                <View style={styles.protocolsInfo}>
-                  <Text style={styles.protocolsCount}>{activeProtocols} Active</Text>
-                  <Text style={styles.protocolsDescription}>
-                    Tap to view your optimization protocols
-                  </Text>
-                </View>
-                <Text style={styles.protocolsArrow}>→</Text>
-              </AnimatedTouchable>
-            </AnimatedCard>
-          </View>
-        )}
-
-        {/* Patterns & Trends (Coming Soon) */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Patterns & Trends</Text>
-          <View style={styles.comingSoonCard}>
-            <Text style={styles.comingSoonIcon}>📈</Text>
-            <Text style={styles.comingSoonTitle}>Coming Soon</Text>
-            <Text style={styles.comingSoonDescription}>
-              AI-powered pattern detection and personalized trend analysis
-            </Text>
-          </View>
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.actionsGrid}>
-            <AnimatedTouchable
-              style={styles.actionButton}
-              onPress={() => router.push('/test/input')}
-            >
-              <Text style={styles.actionIcon}>🧪</Text>
-              <Text style={styles.actionText}>Log Test</Text>
-            </AnimatedTouchable>
-
-            <AnimatedTouchable
-              style={styles.actionButton}
-              onPress={() => router.push('/(tabs)/track')}
-            >
-              <Text style={styles.actionIcon}>📊</Text>
-              <Text style={styles.actionText}>View History</Text>
-            </AnimatedTouchable>
-
-            <AnimatedTouchable
-              style={styles.actionButton}
-              onPress={() => router.push('/(tabs)/protocols')}
-            >
-              <Text style={styles.actionIcon}>📋</Text>
-              <Text style={styles.actionText}>Protocols</Text>
-            </AnimatedTouchable>
-
-            <AnimatedTouchable
-              style={styles.actionButton}
-              onPress={() => router.push('/(tabs)/ask')}
-            >
-              <Text style={styles.actionIcon}>🤖</Text>
-              <Text style={styles.actionText}>Ask AI</Text>
-            </AnimatedTouchable>
-          </View>
-        </View>
-
-        <View style={{ height: DesignSystem.spacing[20] }} />
-      </ScrollView>
+      {/* Celebration Effects */}
+      {showCelebration && (
+        <CelebrationEffect
+          type={celebrationType}
+          trigger={showCelebration}
+          onComplete={() => setShowCelebration(false)}
+        />
+      )}
     </View>
   );
 }
@@ -309,164 +368,44 @@ export default function InsightsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.neutral[50],
+    backgroundColor: DesignSystem.colors.background,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: DesignSystem.spacing[6],
     paddingTop: DesignSystem.spacing[12],
-    paddingBottom: DesignSystem.spacing[4],
-    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    paddingBottom: DesignSystem.spacing[6],
+    backgroundColor: DesignSystem.colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: DesignSystem.colors.oura.cardBorder,
   },
   headerTitle: {
-    fontSize: DesignSystem.typography.fontSize['2xl'],
+    fontSize: DesignSystem.typography.fontSize['3xl'],
     fontWeight: DesignSystem.typography.fontWeight.semibold,
-    color: DesignSystem.colors.neutral[900],
+    color: DesignSystem.colors.text.primary,
   },
-  helpButton: {
-    width: DesignSystem.touchTarget.comfortable,
-    height: DesignSystem.touchTarget.comfortable,
-    borderRadius: DesignSystem.radius.full,
-    backgroundColor: DesignSystem.colors.neutral[100],
-    alignItems: 'center',
-    justifyContent: 'center',
+  headerGradient: {
+    paddingHorizontal: DesignSystem.spacing[6],
+    paddingTop: DesignSystem.spacing[12],
+    paddingBottom: DesignSystem.spacing[6],
   },
-  helpIcon: {
-    fontSize: DesignSystem.iconSize.md,
-    fontWeight: DesignSystem.typography.fontWeight.bold,
-    color: DesignSystem.colors.neutral[600],
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: DesignSystem.spacing[6],
-  },
-  section: {
-    marginBottom: DesignSystem.spacing[8],
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: DesignSystem.spacing[4],
-  },
-  sectionTitle: {
-    fontSize: DesignSystem.typography.fontSize.xl,
+  headerTitleWhite: {
+    fontSize: DesignSystem.typography.fontSize['3xl'],
     fontWeight: DesignSystem.typography.fontWeight.semibold,
-    color: DesignSystem.colors.neutral[900],
-    marginBottom: DesignSystem.spacing[2],
-  },
-  sectionSubtitle: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.light,
-    color: DesignSystem.colors.neutral[600],
-    marginBottom: DesignSystem.spacing[4],
-  },
-  seeAllText: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.medium,
-    color: DesignSystem.colors.primary[500],
-  },
-  cardWrapper: {
-    marginBottom: DesignSystem.spacing[4],
-  },
-  protocolsCard: {
-    marginBottom: DesignSystem.spacing[4],
-  },
-  protocolsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: DesignSystem.colors.oura.cardBackground,
-    borderRadius: DesignSystem.radius.xl,
-    padding: DesignSystem.spacing[5],
-    borderWidth: 1,
-    borderColor: DesignSystem.colors.oura.cardBorder,
-    ...DesignSystem.shadows.sm,
-  },
-  protocolsIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: DesignSystem.radius.lg,
-    backgroundColor: DesignSystem.colors.oura.subtleBackground,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: DesignSystem.spacing[4],
-  },
-  protocolsIconText: {
-    fontSize: DesignSystem.iconSize.xl,
-  },
-  protocolsInfo: {
-    flex: 1,
-  },
-  protocolsCount: {
-    fontSize: DesignSystem.typography.fontSize.lg,
-    fontWeight: DesignSystem.typography.fontWeight.semibold,
-    color: DesignSystem.colors.neutral[900],
+    color: '#FFFFFF',
     marginBottom: DesignSystem.spacing[1],
   },
-  protocolsDescription: {
+  headerSubtitle: {
     fontSize: DesignSystem.typography.fontSize.sm,
     fontWeight: DesignSystem.typography.fontWeight.light,
-    color: DesignSystem.colors.neutral[600],
+    color: 'rgba(255, 255, 255, 0.9)',
   },
-  protocolsArrow: {
-    fontSize: DesignSystem.iconSize.lg,
-    color: DesignSystem.colors.neutral[400],
+  loadingContainer: {
+    padding: DesignSystem.spacing[6],
+    gap: DesignSystem.spacing[4],
   },
-  comingSoonCard: {
-    backgroundColor: DesignSystem.colors.oura.subtleBackground,
-    borderRadius: DesignSystem.radius.xl,
-    padding: DesignSystem.spacing[8],
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: DesignSystem.colors.oura.cardBorder,
-    borderStyle: 'dashed',
-  },
-  comingSoonIcon: {
-    fontSize: DesignSystem.iconSize['3xl'],
-    marginBottom: DesignSystem.spacing[3],
-  },
-  comingSoonTitle: {
-    fontSize: DesignSystem.typography.fontSize.lg,
-    fontWeight: DesignSystem.typography.fontWeight.semibold,
-    color: DesignSystem.colors.neutral[900],
-    marginBottom: DesignSystem.spacing[2],
-  },
-  comingSoonDescription: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.light,
-    color: DesignSystem.colors.neutral[600],
-    textAlign: 'center',
-    lineHeight: DesignSystem.typography.fontSize.sm * 1.6,
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: DesignSystem.spacing[3],
-  },
-  actionButton: {
-    width: (width - DesignSystem.spacing[6] * 2 - DesignSystem.spacing[3]) / 2,
-    backgroundColor: DesignSystem.colors.oura.cardBackground,
-    borderRadius: DesignSystem.radius.xl,
-    padding: DesignSystem.spacing[5],
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: DesignSystem.colors.oura.cardBorder,
-    ...DesignSystem.shadows.sm,
-  },
-  actionIcon: {
-    fontSize: DesignSystem.iconSize.xl,
-    marginBottom: DesignSystem.spacing[2],
-  },
-  actionText: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.medium,
-    color: DesignSystem.colors.neutral[700],
+  emptyContainer: {
+    flex: 1,
+    padding: DesignSystem.spacing[6],
+    justifyContent: 'center',
   },
 });
-
