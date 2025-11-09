@@ -21,9 +21,9 @@ import { LineChart } from 'react-native-chart-kit';
 import { DesignSystem } from '@/constants/DesignSystem';
 
 const HORMONE_COLORS = {
-  cortisol: '#3B82F6',
-  testosterone: '#EF4444',
-  dhea: '#F97316',
+  cortisol: DesignSystem.colors.hormones.cortisol,      // Soft blue-gray
+  testosterone: DesignSystem.colors.hormones.testosterone,  // Soft rose
+  dhea: DesignSystem.colors.hormones.dhea,              // Soft amber
 };
 
 const HORMONE_ICONS = {
@@ -407,13 +407,13 @@ const styles = StyleSheet.create({
     paddingBottom: DesignSystem.spacing[4],
     backgroundColor: DesignSystem.colors.neutral[0],
     borderBottomWidth: 1,
-    borderBottomColor: DesignSystem.colors.neutral[200],
+    borderBottomColor: DesignSystem.colors.oura.cardBorder,
   },
   backButton: {
     width: 48,
     height: 48,
     borderRadius: DesignSystem.radius.full,
-    backgroundColor: DesignSystem.colors.neutral[100],
+    backgroundColor: DesignSystem.colors.oura.subtleBackground,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: DesignSystem.typography.fontSize['2xl'],
-    fontWeight: DesignSystem.typography.fontWeight.bold,
+    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
     color: DesignSystem.colors.neutral[900],
   },
   scrollView: {
@@ -442,18 +442,22 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
     alignItems: 'center',
+    ...DesignSystem.shadows.sm,
   },
   statValue: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: '200',  // Thin like Oura
+    color: DesignSystem.colors.primary[500],
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[500],
   },
   filterContainer: {
     gap: 8,
@@ -464,18 +468,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
   },
   filterButtonActive: {
-    borderColor: '#007AFF',
-    backgroundColor: '#007AFF',
+    borderColor: DesignSystem.colors.primary[500],
+    backgroundColor: DesignSystem.colors.primary[500],
   },
   filterText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: DesignSystem.typography.fontWeight.regular,
+    color: DesignSystem.colors.neutral[600],
   },
   filterTextActive: {
     color: '#fff',
