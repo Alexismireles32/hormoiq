@@ -209,7 +209,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <EliAnimatedBackground type="pink">
+    <EliAnimatedBackground type="pink" scrollEnabled={false}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>

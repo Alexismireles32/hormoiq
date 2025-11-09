@@ -188,7 +188,7 @@ export default function TrackScreen() {
   const screenWidth = Dimensions.get('window').width;
 
   return (
-    <EliAnimatedBackground type="green">
+    <EliAnimatedBackground type="green" scrollEnabled={false}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -450,7 +450,7 @@ export default function TrackScreen() {
       </View>
 
       <View style={{ height: 40 }} />
-      </View>
+      </ScrollView>
     </EliAnimatedBackground>
   );
 }
