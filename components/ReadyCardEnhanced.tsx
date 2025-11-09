@@ -214,11 +214,18 @@ export function ReadyCardEnhanced({ tests, userGender }: ReadyCardEnhancedProps)
   const emoji = getReadyEmoji(readyData.score);
   const message = getReadyMessage(readyData.score);
 
-  // Interpolate animated score for display
-  const animatedScoreValue = scoreAnim.interpolate({
-    inputRange: [0, 100],
-    outputRange: [0, 100],
-  });
+  // Use state to display the animated score value
+  const [displayScore, setDisplayScore] = React.useState(0);
+
+  React.useEffect(() => {
+    const listener = scoreAnim.addListener(({ value }) => {
+      setDisplayScore(Math.round(value));
+    });
+
+    return () => {
+      scoreAnim.removeListener(listener);
+    };
+  }, [scoreAnim]);
 
   return (
     <>
@@ -274,12 +281,7 @@ export function ReadyCardEnhanced({ tests, userGender }: ReadyCardEnhancedProps)
                 { transform: [{ scale: pulseAnim }] }
               ]}
             >
-              <Animated.Text style={styles.scoreNumber}>
-                {animatedScoreValue.interpolate({
-                  inputRange: [0, 100],
-                  outputRange: ['0', '100'],
-                }).interpolate((value) => Math.round(parseFloat(value as any)).toString())}
-              </Animated.Text>
+              <Text style={styles.scoreNumber}>{displayScore}</Text>
               <Text style={styles.scoreEmoji}>{emoji}</Text>
             </Animated.View>
           </View>
