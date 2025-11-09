@@ -18,10 +18,13 @@ import { FeatureExplainer, FeatureType } from '@/components/FeatureExplainer';
 import { SkeletonLoader, SkeletonCard, SkeletonScoreCard } from '@/components/SkeletonLoader';
 import { EmptyStateIllustration } from '@/components/EmptyStateIllustration';
 import { ProgressTracker } from '@/components/ProgressTracker';
+import { GuidedTour, defaultTourSteps } from '@/components/GuidedTour';
+import { FirstTestTutorial } from '@/components/FirstTestTutorial';
 import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
 import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -70,10 +73,54 @@ export default function DashboardScreen() {
   const [userAge, setUserAge] = useState(30);
   const [showExplainer, setShowExplainer] = useState(false);
   const [currentFeature, setCurrentFeature] = useState<FeatureType>('test');
+  const [showTour, setShowTour] = useState(false);
+  const [showTestTutorial, setShowTestTutorial] = useState(false);
 
   useEffect(() => {
     loadData();
+    checkFirstTime();
   }, []);
+
+  const checkFirstTime = async () => {
+    try {
+      const tourCompleted = await AsyncStorage.getItem('tour_completed');
+      if (!tourCompleted && tests.length === 0) {
+        // Show tour after a brief delay for better UX
+        setTimeout(() => {
+          setShowTour(true);
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error checking first time:', error);
+    }
+  };
+
+  const handleTourComplete = async () => {
+    try {
+      await AsyncStorage.setItem('tour_completed', 'true');
+      setShowTour(false);
+      // Optionally show test tutorial after tour
+      setTimeout(() => {
+        setShowTestTutorial(true);
+      }, 500);
+    } catch (error) {
+      console.error('Error saving tour completion:', error);
+    }
+  };
+
+  const handleTutorialClose = async () => {
+    try {
+      await AsyncStorage.setItem('tutorial_seen', 'true');
+      setShowTestTutorial(false);
+    } catch (error) {
+      console.error('Error saving tutorial seen:', error);
+    }
+  };
+
+  const handleStartFirstTest = () => {
+    setShowTestTutorial(false);
+    router.push('/test/input');
+  };
 
   const loadData = async () => {
     if (!user) return;
@@ -222,8 +269,8 @@ export default function DashboardScreen() {
             description="Start your hormone tracking journey by logging your first test. It takes less than a minute!"
             actionLabel="Log Your First Test"
             onActionPress={() => router.push('/test/input')}
-            secondaryActionLabel="Learn More"
-            onSecondaryActionPress={() => handleShowExplainer('test')}
+            secondaryActionLabel="How to Use Test Strips"
+            onSecondaryActionPress={() => setShowTestTutorial(true)}
           />
         </ScrollView>
 
@@ -472,6 +519,20 @@ export default function DashboardScreen() {
         visible={showExplainer}
         feature={currentFeature}
         onClose={() => setShowExplainer(false)}
+      />
+
+      {/* Guided Tour - shown after first login */}
+      <GuidedTour
+        visible={showTour}
+        onComplete={handleTourComplete}
+        steps={defaultTourSteps}
+      />
+
+      {/* First Test Tutorial - shown after tour or manually */}
+      <FirstTestTutorial
+        visible={showTestTutorial}
+        onClose={handleTutorialClose}
+        onStartTest={handleStartFirstTest}
       />
     </View>
   );

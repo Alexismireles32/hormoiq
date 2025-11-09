@@ -15,6 +15,7 @@ import { useAdmin } from '@/contexts/AdminContext';
 import { supabase } from '@/lib/supabase';
 import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ProfileScreen() {
   const { user, signOut, isAnonymous } = useAuth();
@@ -92,6 +93,26 @@ export default function ProfileScreen() {
         },
       ]
     );
+  };
+
+  const handleReplayTour = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await AsyncStorage.removeItem('tour_completed');
+      Alert.alert('Tour Reset', 'Please restart the app to see the tour again.', [
+        { text: 'OK' }
+      ]);
+    } catch (error) {
+      console.error('Error resetting tour:', error);
+    }
+  };
+
+  const handleShowTutorial = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push({
+      pathname: '/(tabs)',
+      params: { showTutorial: 'true' }
+    });
   };
 
   const handleBack = () => {
@@ -245,6 +266,29 @@ export default function ProfileScreen() {
               {user?.id}
             </Text>
           </View>
+        </View>
+
+        {/* Help Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Help & Support</Text>
+          
+          <TouchableOpacity style={styles.helpButton} onPress={handleShowTutorial}>
+            <Text style={styles.helpIcon}>🧪</Text>
+            <View style={styles.helpContent}>
+              <Text style={styles.helpTitle}>Test Strip Tutorial</Text>
+              <Text style={styles.helpDescription}>Learn how to use your hormone test strips</Text>
+            </View>
+            <Text style={styles.helpArrow}>→</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.helpButton} onPress={handleReplayTour}>
+            <Text style={styles.helpIcon}>👋</Text>
+            <View style={styles.helpContent}>
+              <Text style={styles.helpTitle}>App Tour</Text>
+              <Text style={styles.helpDescription}>Reset and replay the guided tour</Text>
+            </View>
+            <Text style={styles.helpArrow}>↻</Text>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
@@ -489,6 +533,40 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right',
   },
+  helpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    borderRadius: DesignSystem.radius.lg,
+    padding: DesignSystem.spacing[4],
+    marginBottom: DesignSystem.spacing[3],
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
+    ...DesignSystem.shadows.sm,
+  },
+  helpIcon: {
+    fontSize: DesignSystem.iconSize.lg,
+    marginRight: DesignSystem.spacing[4],
+  },
+  helpContent: {
+    flex: 1,
+  },
+  helpTitle: {
+    fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.neutral[900],
+    marginBottom: DesignSystem.spacing[1],
+  },
+  helpDescription: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[600],
+  },
+  helpArrow: {
+    fontSize: DesignSystem.iconSize.md,
+    color: DesignSystem.colors.neutral[400],
+    marginLeft: DesignSystem.spacing[2],
+  },
   signOutButton: {
     backgroundColor: DesignSystem.colors.error.light,
     paddingVertical: DesignSystem.spacing[4],
@@ -496,6 +574,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: DesignSystem.colors.error.DEFAULT,
+    marginTop: DesignSystem.spacing[8],
   },
   signOutText: {
     fontSize: DesignSystem.typography.fontSize.base,
