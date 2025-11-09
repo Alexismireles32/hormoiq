@@ -13,6 +13,8 @@ import { HormoneTest } from '@/types';
 import * as Haptics from 'expo-haptics';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { DesignSystem } from '@/constants/DesignSystem';
+import { CircularProgress } from './ProgressBar';
+import { router } from 'expo-router';
 
 interface ReadyCardProps {
   tests: HormoneTest[];
@@ -41,21 +43,77 @@ export function ReadyCard({ tests, userGender }: ReadyCardProps) {
     setShowBreakdown(true);
   };
 
-  // Locked state
+  // Locked state with progress
   if (!readyData.can_calculate) {
+    const testsThisWeek = tests.filter(test => {
+      const testDate = new Date(test.timestamp);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return testDate >= weekAgo;
+    }).length;
+    
+    const requiredTests = 3;
+    const progress = (testsThisWeek / requiredTests) * 100;
+
     return (
-      <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          router.push('/test/input');
+        }}
+        activeOpacity={0.8}
+      >
         <View style={styles.lockedContainer}>
-          <Text style={styles.lockIcon}>🔒</Text>
-          <Text style={styles.lockedTitle}>READY Score Locked</Text>
+          {/* Progress Ring */}
+          <CircularProgress
+            progress={progress}
+            size={140}
+            strokeWidth={10}
+            color={DesignSystem.colors.primary[500]}
+            backgroundColor={DesignSystem.colors.neutral[200]}
+            showPercentage={false}
+          >
+            <Text style={styles.lockIcon}>🔒</Text>
+          </CircularProgress>
+
+          <Text style={styles.lockedTitle}>READYSCORE™ Locked</Text>
+          <Text style={styles.lockedProgress}>
+            {testsThisWeek} of {requiredTests} tests this week
+          </Text>
           <Text style={styles.lockedSubtitle}>
-            {readyData.tests_needed} more test{readyData.tests_needed !== 1 ? 's' : ''} needed in last 7 days
+            {readyData.tests_needed} more test{readyData.tests_needed !== 1 ? 's' : ''} needed
           </Text>
-          <Text style={styles.lockedHint}>
-            Log at least 3 tests this week to unlock your daily READY score
-          </Text>
+
+          {/* What You'll Get Preview */}
+          <View style={styles.previewSection}>
+            <Text style={styles.previewTitle}>You'll unlock:</Text>
+            <View style={styles.previewItem}>
+              <Text style={styles.previewIcon}>⚡</Text>
+              <Text style={styles.previewText}>Daily wellness score (0-100)</Text>
+            </View>
+            <View style={styles.previewItem}>
+              <Text style={styles.previewIcon}>📈</Text>
+              <Text style={styles.previewText}>Personalized recommendations</Text>
+            </View>
+            <View style={styles.previewItem}>
+              <Text style={styles.previewIcon}>🎯</Text>
+              <Text style={styles.previewText}>Readiness insights</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.unlockButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/test/input');
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.unlockButtonText}>Log a Test</Text>
+          </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   }
 
@@ -318,12 +376,64 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: DesignSystem.typography.fontSize.sm * DesignSystem.typography.lineHeight.relaxed,
   },
+  lockedProgress: {
+    fontSize: DesignSystem.typography.fontSize.lg,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.primary[600],
+    marginBottom: DesignSystem.spacing[2],
+    marginTop: DesignSystem.spacing[4],
+  },
   lockedHint: {
     fontSize: DesignSystem.typography.fontSize.xs,
     fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
     color: DesignSystem.colors.neutral[500],
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  previewSection: {
+    width: '100%',
+    backgroundColor: DesignSystem.colors.oura.subtleBackground,
+    borderRadius: DesignSystem.radius.lg,
+    padding: DesignSystem.spacing[4],
+    marginTop: DesignSystem.spacing[6],
+    gap: DesignSystem.spacing[3],
+  },
+  previewTitle: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.neutral[900],
+    marginBottom: DesignSystem.spacing[2],
+  },
+  previewItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: DesignSystem.spacing[2],
+  },
+  previewIcon: {
+    fontSize: DesignSystem.iconSize.sm,
+  },
+  previewText: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[700],
+    flex: 1,
+  },
+  unlockButton: {
+    backgroundColor: DesignSystem.colors.primary[500],
+    paddingVertical: DesignSystem.spacing[4],
+    paddingHorizontal: DesignSystem.spacing[8],
+    borderRadius: DesignSystem.radius.full,
+    marginTop: DesignSystem.spacing[6],
+    minHeight: DesignSystem.touchTarget.comfortable,
+    minWidth: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...DesignSystem.shadows.md,
+  },
+  unlockButtonText: {
+    fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.neutral[0],
   },
   header: {
     flexDirection: 'row',
