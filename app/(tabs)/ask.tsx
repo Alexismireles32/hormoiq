@@ -24,7 +24,6 @@ import { DesignSystem } from '@/constants/DesignSystem';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { sanitizeAIResponse, sanitizeChatMessage } from '@/lib/sanitize';
-import { EliAnimatedBackground } from '@/components/EliAnimatedBackground';
 
 interface Message {
   id: string;
@@ -373,22 +372,19 @@ export default function AskScreen() {
 
   if (loadingData) {
     return (
-      <EliAnimatedBackground type="blue" scrollEnabled={false}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={DesignSystem.colors.primary[500]} />
-          <Text style={styles.loadingText}>Loading your coach...</Text>
-        </View>
-      </EliAnimatedBackground>
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={DesignSystem.colors.primary[500]} />
+        <Text style={styles.loadingText}>Loading your coach...</Text>
+      </View>
     );
   }
 
   return (
-    <EliAnimatedBackground type="blue" scrollEnabled={false}>
-      <KeyboardAvoidingView
-        style={styles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
       {/* Header - Perplexity Style */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -550,14 +546,14 @@ export default function AskScreen() {
           </TouchableOpacity>
         </View>
       </View>
-      </KeyboardAvoidingView>
-    </EliAnimatedBackground>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  keyboardContainer: {
+  container: {
     flex: 1,
+    backgroundColor: DesignSystem.colors.neutral[0], // Pure white like Perplexity
   },
   centered: {
     justifyContent: 'center',

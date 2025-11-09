@@ -5,7 +5,6 @@ import { MiniChart } from '@/components/MiniChart';
 import { DataSummary, SummaryItem } from '@/components/DataSummary';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { AnimatedTouchable } from '@/components/AnimatedTouchable';
-import { EliAnimatedBackground } from '@/components/EliAnimatedBackground';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
@@ -188,7 +187,7 @@ export default function TrackScreen() {
   const screenWidth = Dimensions.get('window').width;
 
   return (
-    <EliAnimatedBackground type="green" scrollEnabled={false}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -450,8 +449,8 @@ export default function TrackScreen() {
       </View>
 
       <View style={{ height: 40 }} />
-      </ScrollView>
-    </EliAnimatedBackground>
+    </ScrollView>
+    </View>
   );
 }
 
@@ -469,13 +468,13 @@ const styles = StyleSheet.create({
     paddingBottom: DesignSystem.spacing[4],
     backgroundColor: DesignSystem.colors.neutral[0],
     borderBottomWidth: 1,
-    borderBottomColor: DesignSystem.colors.neutral[200],
+    borderBottomColor: DesignSystem.colors.oura.cardBorder,
   },
   backButton: {
     width: 48,
     height: 48,
     borderRadius: DesignSystem.radius.full,
-    backgroundColor: DesignSystem.colors.neutral[100],
+    backgroundColor: DesignSystem.colors.oura.subtleBackground,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -504,9 +503,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 16,
-    backgroundColor: DesignSystem.colors.surface,
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
     borderWidth: 1,
-    borderColor: DesignSystem.colors.neutral[200],
+    borderColor: DesignSystem.colors.oura.cardBorder,
     alignItems: 'center',
     ...DesignSystem.shadows.sm,
   },
@@ -540,8 +539,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: DesignSystem.colors.neutral[200],
-    backgroundColor: DesignSystem.colors.surface,
+    borderColor: DesignSystem.colors.oura.cardBorder,
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
   },
   filterButtonActive: {
     borderColor: DesignSystem.colors.primary[500],
@@ -589,11 +588,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   timelineCard: {
-    backgroundColor: DesignSystem.colors.surface,
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
     borderRadius: DesignSystem.radius.xl,
     padding: DesignSystem.spacing[6],
     borderWidth: 1,
-    borderColor: DesignSystem.colors.neutral[200],
+    borderColor: DesignSystem.colors.oura.cardBorder,
     ...DesignSystem.shadows.sm,
   },
   timelineItem: {
@@ -644,9 +643,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: DesignSystem.spacing[4],
     borderRadius: DesignSystem.radius.xl,
-    backgroundColor: DesignSystem.colors.surface,
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
     borderWidth: 1,
-    borderColor: DesignSystem.colors.neutral[200],
+    borderColor: DesignSystem.colors.oura.cardBorder,
     ...DesignSystem.shadows.sm,
   },
   testIconContainer: {

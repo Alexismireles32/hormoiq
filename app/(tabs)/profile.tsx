@@ -17,7 +17,6 @@ import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { exportUserData, deleteAllUserData, generateDataSummary } from '@/lib/dataExport';
-import { EliAnimatedBackground } from '@/components/EliAnimatedBackground';
 
 export default function ProfileScreen() {
   const { user, signOut, isAnonymous } = useAuth();
@@ -200,16 +199,14 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <EliAnimatedBackground type="pink" scrollEnabled={false}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={DesignSystem.colors.primary[500]} />
-        </View>
-      </EliAnimatedBackground>
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={DesignSystem.colors.primary[500]} />
+      </View>
     );
   }
 
   return (
-    <EliAnimatedBackground type="pink" scrollEnabled={false}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -449,7 +446,7 @@ export default function ProfileScreen() {
 
         <View style={{ height: DesignSystem.spacing[12] }} />
       </ScrollView>
-    </EliAnimatedBackground>
+    </View>
   );
 }
 
@@ -688,12 +685,12 @@ const styles = StyleSheet.create({
   helpButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: DesignSystem.colors.surface,
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
     borderRadius: DesignSystem.radius.lg,
     padding: DesignSystem.spacing[4],
     marginBottom: DesignSystem.spacing[3],
     borderWidth: 1,
-    borderColor: DesignSystem.colors.neutral[200],
+    borderColor: DesignSystem.colors.oura.cardBorder,
     ...DesignSystem.shadows.sm,
   },
   helpIcon: {
