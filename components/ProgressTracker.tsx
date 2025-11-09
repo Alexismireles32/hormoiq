@@ -73,36 +73,53 @@ export function ProgressTracker({ tests, userAge }: ProgressTrackerProps) {
 
   const streak = calculateStreak();
 
-  // Define features and their unlock requirements
+  // Calculate test date range for time-based requirements
+  const testDates = tests.map(t => new Date(t.timestamp));
+  const earliestTest = testDates.length > 0 ? new Date(Math.min(...testDates.map(d => d.getTime()))) : null;
+  const latestTest = testDates.length > 0 ? new Date(Math.max(...testDates.map(d => d.getTime()))) : null;
+  
+  let daySpan = 0;
+  if (earliestTest && latestTest) {
+    daySpan = Math.floor((latestTest.getTime() - earliestTest.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
+  // Define features and their unlock requirements (using centralized constants)
   const features: Feature[] = [
     {
       id: 'readyscore',
       name: 'READYSCORE™',
       icon: '⚡',
-      requiredTests: 3,
-      requiredDays: 7,
+      requiredTests: 1, // Progressive: Shows from test 1
+      requiredDays: undefined,
       description: 'Track your daily wellness number',
-      unlocked: testsThisWeek >= 3,
-      progress: (testsThisWeek / 3) * 100,
+      unlocked: totalTests >= 1, // Unlocked from first test
+      progress: Math.min(100, (testsThisWeek / 3) * 100), // Progress toward optimal (3 tests/week)
     },
     {
       id: 'bioage',
       name: 'BIOAGE™',
       icon: '🧬',
-      requiredTests: 5,
-      requiredDays: 7,
+      requiredTests: 10,
+      requiredDays: 14, // 2 weeks
       description: 'Discover your biological age',
-      unlocked: testsThisWeek >= 5,
-      progress: (testsThisWeek / 5) * 100,
+      unlocked: totalTests >= 10 && daySpan >= 14,
+      progress: Math.min(100, Math.max(
+        (totalTests / 10) * 50, // 50% from test count
+        (daySpan / 14) * 50 // 50% from day span
+      )),
     },
     {
       id: 'impact',
       name: 'IMPACT™',
       icon: '🎯',
       requiredTests: 10,
+      requiredDays: 14, // 2 weeks for pattern analysis
       description: 'See what works for you',
-      unlocked: totalTests >= 10,
-      progress: (totalTests / 10) * 100,
+      unlocked: totalTests >= 10 && daySpan >= 14,
+      progress: Math.min(100, Math.max(
+        (totalTests / 10) * 50,
+        (daySpan / 14) * 50
+      )),
     },
   ];
 
