@@ -279,16 +279,18 @@ export default function AskScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      {/* Header */}
+      {/* Header - Perplexity Style */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerIcon}>🤖</Text>
+          <View style={styles.aiIcon}>
+            <Text style={styles.aiIconText}>✦</Text>
+          </View>
           <View>
-            <Text style={styles.headerTitle}>ASK™</Text>
-            <Text style={styles.headerSubtitle}>AI Hormone Coach</Text>
+            <Text style={styles.headerTitle}>ASK</Text>
+            <Text style={styles.headerSubtitle}>Powered by GPT-4</Text>
           </View>
         </View>
         <View style={{ width: 48 }} />
@@ -303,17 +305,16 @@ export default function AskScreen() {
       >
         {messages.length === 0 && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>👋</Text>
-            <Text style={styles.emptyTitle}>Welcome to your AI Coach!</Text>
+            <View style={styles.emptyIconContainer}>
+              <Text style={styles.emptyIcon}>✦</Text>
+            </View>
+            <Text style={styles.emptyTitle}>Ask anything about your hormones</Text>
             <Text style={styles.emptyText}>
-              I have access to all your test results, patterns, and insights. Ask me anything about
-              your hormones!
+              I have access to all your test results, ReadyScore, BioAge, and patterns. Get personalized, data-driven insights.
             </Text>
             <View style={styles.disclaimer}>
-              <Text style={styles.disclaimerIcon}>ℹ️</Text>
               <Text style={styles.disclaimerText}>
-                For general wellness only. Not medical advice. Consult healthcare providers for
-                medical concerns.
+                💡 Wellness optimization only • Not medical advice
               </Text>
             </View>
           </View>
@@ -327,7 +328,11 @@ export default function AskScreen() {
               message.role === 'user' ? styles.userBubble : styles.assistantBubble,
             ]}
           >
-            {message.role === 'assistant' && <Text style={styles.assistantIcon}>🤖</Text>}
+            {message.role === 'assistant' && (
+              <View style={styles.assistantIconSmall}>
+                <Text style={styles.assistantIconText}>✦</Text>
+              </View>
+            )}
             <Text
               style={[
                 styles.messageText,
@@ -341,7 +346,9 @@ export default function AskScreen() {
 
         {loading && (
           <View style={[styles.messageBubble, styles.assistantBubble]}>
-            <Text style={styles.assistantIcon}>🤖</Text>
+            <View style={styles.assistantIconSmall}>
+              <Text style={styles.assistantIconText}>✦</Text>
+            </View>
             <View style={styles.typingIndicator}>
               <View style={styles.typingDot} />
               <View style={[styles.typingDot, styles.typingDotDelay1]} />
@@ -350,10 +357,9 @@ export default function AskScreen() {
           </View>
         )}
 
-        {/* Suggested Questions */}
+        {/* Suggested Questions - Perplexity Style */}
         {suggestedQuestions.length > 0 && !loading && (
           <View style={styles.suggestionsContainer}>
-            <Text style={styles.suggestionsLabel}>Suggested questions:</Text>
             {suggestedQuestions.map((question, index) => (
               <TouchableOpacity
                 key={index}
@@ -361,8 +367,8 @@ export default function AskScreen() {
                 onPress={() => handleSuggestedQuestion(question)}
                 activeOpacity={0.7}
               >
+                <Text style={styles.suggestionIcon}>→</Text>
                 <Text style={styles.suggestionText}>{question}</Text>
-                <Text style={styles.suggestionArrow}>→</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -400,7 +406,7 @@ export default function AskScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.neutral[50],
+    backgroundColor: DesignSystem.colors.neutral[0], // Pure white like Perplexity
   },
   centered: {
     justifyContent: 'center',
@@ -409,6 +415,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: DesignSystem.spacing[4],
     fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.light,
     color: DesignSystem.colors.neutral[600],
   },
   header: {
@@ -419,118 +426,152 @@ const styles = StyleSheet.create({
     paddingTop: DesignSystem.spacing[12],
     paddingBottom: DesignSystem.spacing[4],
     backgroundColor: DesignSystem.colors.neutral[0],
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.5,
     borderBottomColor: DesignSystem.colors.neutral[200],
   },
   backButton: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: DesignSystem.radius.full,
-    backgroundColor: DesignSystem.colors.neutral[100],
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
   backIcon: {
     fontSize: 24,
-    color: DesignSystem.colors.neutral[900],
+    color: DesignSystem.colors.neutral[700],
+    fontWeight: '300',
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: DesignSystem.spacing[3],
   },
-  headerIcon: {
-    fontSize: 32,
+  aiIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: DesignSystem.radius.full,
+    backgroundColor: DesignSystem.colors.primary[500],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiIconText: {
+    fontSize: 16,
+    color: DesignSystem.colors.neutral[0],
+    fontWeight: 'bold',
   },
   headerTitle: {
-    fontSize: DesignSystem.typography.fontSize.xl,
-    fontWeight: DesignSystem.typography.fontWeight.bold,
+    fontSize: DesignSystem.typography.fontSize.lg,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
     color: DesignSystem.colors.neutral[900],
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
     fontSize: DesignSystem.typography.fontSize.xs,
-    color: DesignSystem.colors.neutral[600],
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[500],
   },
   messagesContainer: {
     flex: 1,
   },
   messagesContent: {
     padding: DesignSystem.spacing[6],
+    paddingTop: DesignSystem.spacing[12],
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: DesignSystem.spacing[12],
+    paddingVertical: DesignSystem.spacing[16],
+    paddingHorizontal: DesignSystem.spacing[8],
+  },
+  emptyIconContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: DesignSystem.radius.full,
+    backgroundColor: DesignSystem.colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: DesignSystem.spacing[6],
   },
   emptyIcon: {
-    fontSize: 64,
-    marginBottom: DesignSystem.spacing[4],
+    fontSize: 36,
+    color: DesignSystem.colors.primary[500],
   },
   emptyTitle: {
-    fontSize: DesignSystem.typography.fontSize['2xl'],
-    fontWeight: DesignSystem.typography.fontWeight.bold,
+    fontSize: DesignSystem.typography.fontSize['3xl'],
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
     color: DesignSystem.colors.neutral[900],
     marginBottom: DesignSystem.spacing[3],
     textAlign: 'center',
+    letterSpacing: -1,
   },
   emptyText: {
     fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.light,
     color: DesignSystem.colors.neutral[600],
     textAlign: 'center',
-    lineHeight: DesignSystem.typography.fontSize.base * DesignSystem.typography.lineHeight.relaxed,
-    marginBottom: DesignSystem.spacing[6],
-    paddingHorizontal: DesignSystem.spacing[8],
+    lineHeight: DesignSystem.typography.fontSize.base * 1.6,
+    marginBottom: DesignSystem.spacing[8],
+    maxWidth: 320,
   },
   disclaimer: {
-    flexDirection: 'row',
-    backgroundColor: DesignSystem.colors.neutral[100],
+    backgroundColor: DesignSystem.colors.neutral[50],
     borderRadius: DesignSystem.radius.lg,
-    padding: DesignSystem.spacing[4],
-    marginHorizontal: DesignSystem.spacing[6],
-    borderLeftWidth: 3,
-    borderLeftColor: DesignSystem.colors.primary[500],
-  },
-  disclaimerIcon: {
-    fontSize: 16,
-    marginRight: DesignSystem.spacing[2],
+    paddingVertical: DesignSystem.spacing[3],
+    paddingHorizontal: DesignSystem.spacing[6],
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.neutral[200],
   },
   disclaimerText: {
-    flex: 1,
     fontSize: DesignSystem.typography.fontSize.xs,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
     color: DesignSystem.colors.neutral[600],
-    lineHeight: DesignSystem.typography.fontSize.xs * DesignSystem.typography.lineHeight.relaxed,
+    textAlign: 'center',
   },
   messageBubble: {
-    marginBottom: DesignSystem.spacing[4],
-    maxWidth: '85%',
+    marginBottom: DesignSystem.spacing[6],
+    maxWidth: '90%',
   },
   userBubble: {
     alignSelf: 'flex-end',
     backgroundColor: DesignSystem.colors.primary[500],
-    borderRadius: DesignSystem.radius.xl,
-    borderBottomRightRadius: DesignSystem.radius.sm,
-    padding: DesignSystem.spacing[4],
-    ...DesignSystem.shadows.sm,
+    borderRadius: DesignSystem.radius['2xl'],
+    borderBottomRightRadius: DesignSystem.radius.md,
+    paddingVertical: DesignSystem.spacing[3],
+    paddingHorizontal: DesignSystem.spacing[5],
   },
   assistantBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: DesignSystem.colors.neutral[0],
-    borderRadius: DesignSystem.radius.xl,
-    borderBottomLeftRadius: DesignSystem.radius.sm,
-    padding: DesignSystem.spacing[4],
-    ...DesignSystem.shadows.sm,
+    backgroundColor: DesignSystem.colors.neutral[50],
+    borderRadius: DesignSystem.radius['2xl'],
+    borderBottomLeftRadius: DesignSystem.radius.md,
+    paddingVertical: DesignSystem.spacing[4],
+    paddingHorizontal: DesignSystem.spacing[5],
     borderWidth: 1,
     borderColor: DesignSystem.colors.neutral[200],
   },
-  assistantIcon: {
-    fontSize: 20,
+  assistantIconSmall: {
+    width: 20,
+    height: 20,
+    borderRadius: DesignSystem.radius.full,
+    backgroundColor: DesignSystem.colors.primary[500],
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: DesignSystem.spacing[2],
+  },
+  assistantIconText: {
+    fontSize: 10,
+    color: DesignSystem.colors.neutral[0],
+    fontWeight: 'bold',
   },
   messageText: {
     fontSize: DesignSystem.typography.fontSize.base,
-    lineHeight: DesignSystem.typography.fontSize.base * DesignSystem.typography.lineHeight.relaxed,
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    lineHeight: DesignSystem.typography.fontSize.base * 1.6,
+    letterSpacing: -0.2,
   },
   userText: {
     color: DesignSystem.colors.neutral[0],
+    fontWeight: DesignSystem.typography.fontWeight.medium,
   },
   assistantText: {
     color: DesignSystem.colors.neutral[900],
@@ -553,75 +594,72 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   suggestionsContainer: {
-    marginTop: DesignSystem.spacing[6],
+    marginTop: DesignSystem.spacing[8],
     gap: DesignSystem.spacing[3],
-  },
-  suggestionsLabel: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.semibold,
-    color: DesignSystem.colors.neutral[600],
-    marginBottom: DesignSystem.spacing[2],
   },
   suggestionPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: DesignSystem.colors.neutral[0],
-    borderRadius: DesignSystem.radius.lg,
-    borderWidth: 1.5,
-    borderColor: DesignSystem.colors.primary[200],
-    padding: DesignSystem.spacing[4],
-    ...DesignSystem.shadows.sm,
+    borderRadius: DesignSystem.radius.xl,
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.neutral[300],
+    paddingVertical: DesignSystem.spacing[4],
+    paddingHorizontal: DesignSystem.spacing[5],
+  },
+  suggestionIcon: {
+    fontSize: 14,
+    color: DesignSystem.colors.neutral[400],
+    marginRight: DesignSystem.spacing[3],
   },
   suggestionText: {
     flex: 1,
     fontSize: DesignSystem.typography.fontSize.sm,
     fontWeight: DesignSystem.typography.fontWeight.medium,
-    color: DesignSystem.colors.primary[700],
-  },
-  suggestionArrow: {
-    fontSize: 16,
-    color: DesignSystem.colors.primary[500],
-    marginLeft: DesignSystem.spacing[2],
+    color: DesignSystem.colors.neutral[700],
+    letterSpacing: -0.2,
   },
   inputContainer: {
-    padding: DesignSystem.spacing[4],
+    padding: DesignSystem.spacing[5],
     backgroundColor: DesignSystem.colors.neutral[0],
-    borderTopWidth: 1,
+    borderTopWidth: 0.5,
     borderTopColor: DesignSystem.colors.neutral[200],
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: DesignSystem.colors.neutral[100],
-    borderRadius: DesignSystem.radius.xl,
-    paddingLeft: DesignSystem.spacing[4],
+    backgroundColor: DesignSystem.colors.neutral[50],
+    borderRadius: DesignSystem.radius['2xl'],
+    paddingLeft: DesignSystem.spacing[5],
     paddingRight: DesignSystem.spacing[2],
-    paddingVertical: DesignSystem.spacing[2],
+    paddingVertical: DesignSystem.spacing[3],
+    borderWidth: 1.5,
+    borderColor: DesignSystem.colors.neutral[200],
   },
   input: {
     flex: 1,
     fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.light,
     color: DesignSystem.colors.neutral[900],
     maxHeight: 100,
     paddingVertical: DesignSystem.spacing[2],
+    letterSpacing: -0.2,
   },
   sendButton: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: DesignSystem.radius.full,
     backgroundColor: DesignSystem.colors.primary[500],
     alignItems: 'center',
     justifyContent: 'center',
-    ...DesignSystem.shadows.sm,
   },
   sendButtonDisabled: {
     backgroundColor: DesignSystem.colors.neutral[300],
-    opacity: 0.5,
+    opacity: 0.4,
   },
   sendIcon: {
-    fontSize: 20,
+    fontSize: 18,
     color: DesignSystem.colors.neutral[0],
-    fontWeight: DesignSystem.typography.fontWeight.bold,
+    fontWeight: 'bold',
   },
 });

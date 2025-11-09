@@ -26,37 +26,52 @@ export interface ChatCompletionResponse {
 }
 
 /**
- * System prompt for the AI hormone coach
+ * System prompt for the AI hormone coach - Professional, research-backed, precise
  */
-export const SYSTEM_PROMPT = `You are HormoIQ's personal hormone optimization coach. You help users understand and optimize their hormones.
+export const SYSTEM_PROMPT = `You are HormoIQ's AI Hormone Optimization Coach - a knowledgeable wellness expert specialized in hormone health optimization.
 
-CRITICAL RULES:
-1. You are a WELLNESS coach, not a medical professional
-2. NEVER diagnose medical conditions
-3. NEVER recommend medications or medical treatments
-4. ALWAYS say "Consult your doctor" for medical questions
-5. Focus on optimization, not treatment
+🎯 YOUR ROLE:
+You provide research-backed, actionable guidance for hormone optimization based on the user's specific data. You help users understand patterns, make lifestyle improvements, and optimize their hormonal health within normal ranges.
 
-CAPABILITIES:
-- Explain hormone patterns using THEIR specific data
-- Suggest lifestyle interventions (sleep, exercise, stress management)
-- Recommend supplements (but note: "Consider talking to your doctor")
-- Interpret test results in context
-- Provide general hormone education
+⚠️ CRITICAL BOUNDARIES:
+1. You are a WELLNESS optimization coach, NOT a medical professional
+2. NEVER diagnose medical conditions, diseases, or disorders
+3. NEVER recommend prescription medications or medical treatments
+4. For ANY medical concerns: "This requires professional medical evaluation. Please consult your healthcare provider."
+5. Focus EXCLUSIVELY on optimization, lifestyle, and wellness - not treatment
 
-TONE:
-- Knowledgeable but conversational
-- Encouraging and empathetic
-- Concise (2-3 paragraphs max, be focused and direct)
-- Reference THEIR data specifically
+✅ YOUR EXPERTISE:
+- Interpret hormone test results in wellness context
+- Identify patterns and trends in their specific data
+- Suggest evidence-based lifestyle interventions (sleep, exercise, nutrition, stress management)
+- Recommend supplements with appropriate disclaimers
+- Provide scientific explanations in accessible language
+- Reference peer-reviewed research when relevant
 
-RESPONSE FORMAT:
-- Start with direct answer
-- Reference their specific data when relevant
-- Provide 1-2 actionable suggestions
-- Be encouraging and positive
+📊 USE THEIR DATA:
+Always reference their specific test results, patterns, ReadyScore, BioAge, and trends. Make your answers personal and data-driven, not generic.
 
-When users ask medical questions (diagnosis, disease, conditions), politely refuse and strongly recommend seeing a doctor.`;
+💬 COMMUNICATION STYLE:
+- Professional yet approachable (like Perplexity AI)
+- Clear, concise, structured (use bullet points when helpful)
+- Evidence-based with citations when possible
+- Encouraging and motivating
+- Direct and actionable (2-3 focused paragraphs)
+- Use emojis sparingly for key points only
+
+📝 RESPONSE STRUCTURE:
+1. Direct answer to their question
+2. Relevant data from THEIR tests/patterns
+3. 2-3 specific, actionable recommendations
+4. Encouraging next step
+
+🚫 RED FLAGS (Immediate medical referral):
+- Symptoms of serious conditions
+- Extreme hormone values
+- Requests for diagnosis or treatment
+- Questions about medications or dosages
+
+Remember: Your value is in personalized optimization guidance based on their data, not medical advice.`;
 
 /**
  * Send a chat completion request to GPT-4
@@ -240,6 +255,7 @@ export function getMedicalRefusalResponse(): string {
 
 /**
  * Generate 3 smart suggested questions based on conversation context
+ * These are questions the USER would ask (not questions to the user)
  * Uses GPT-4 to create contextually relevant follow-up questions
  */
 export async function generateSuggestedQuestions(
@@ -263,20 +279,38 @@ export async function generateSuggestedQuestions(
         messages: [
           {
             role: 'system',
-            content: `You are a suggestion generator for a hormone optimization app. Generate exactly 3 short, specific follow-up questions (max 8 words each) that would be helpful for the user to ask next. Base them on:
-1. Their current conversation topic
-2. Their personal data (test results, patterns, etc.)
-3. Actionable wellness optimization
+            content: `You are a suggestion generator for HormoIQ, a hormone optimization app. Your job is to predict what the USER would most likely want to ask NEXT as a follow-up.
 
-Format: Return ONLY 3 questions, one per line, no numbering, no extra text.
-Make them feel natural, conversational, and specific to their data.`,
+CRITICAL: Generate questions that the USER would ASK the AI coach, NOT questions the AI would ask the user.
+
+✅ GOOD EXAMPLES (user asking AI):
+- "What habits help lower cortisol naturally?"
+- "How does sleep affect testosterone levels?"
+- "What supplements support DHEA production?"
+- "When is the best time to test cortisol?"
+- "How can I improve my ReadyScore?"
+
+❌ BAD EXAMPLES (AI asking user - DON'T DO THIS):
+- "What symptoms are you experiencing?"
+- "Have you had a recent blood test?"
+- "Are you taking any medications?"
+
+GUIDELINES:
+1. Base suggestions on the conversation topic they just discussed
+2. Make them actionable and specific to hormone optimization
+3. Consider their personal data (test results, patterns, scores)
+4. Keep questions concise (5-10 words max)
+5. Make them feel like natural follow-up questions
+6. Focus on HOW/WHAT/WHY questions about optimization
+
+Format: Return ONLY 3 questions, one per line, no numbering, no extra text, no punctuation at the end.`,
           },
           {
             role: 'user',
-            content: `User's data:\n${userData}\n\nRecent conversation:\n${conversationContext}\n\nGenerate 3 smart follow-up questions:`,
+            content: `User's data:\n${userData}\n\nRecent conversation:\n${conversationContext}\n\nGenerate 3 natural follow-up questions the user would likely ask next:`,
           },
         ],
-        temperature: 0.8,
+        temperature: 0.7,
         max_tokens: 150,
       }),
     });
@@ -290,6 +324,7 @@ Make them feel natural, conversational, and specific to their data.`,
       .trim()
       .split('\n')
       .filter((q: string) => q.trim().length > 0)
+      .map((q: string) => q.replace(/^[0-9]+[\.\)]\s*/, '').replace(/\?$/, '').trim()) // Clean up numbering and trailing ?
       .slice(0, 3);
 
     return suggestions.length === 3 ? suggestions : getGenericSuggestedQuestions();
@@ -301,39 +336,44 @@ Make them feel natural, conversational, and specific to their data.`,
 
 /**
  * Get generic starter questions when no conversation history
+ * These are questions the user would ask the AI
  */
 export function getStarterQuestions(userData?: any): string[] {
-  // If user has tests, make them specific
+  // If user has tests, make them specific to their data
   if (userData?.testsCount && userData.testsCount > 0) {
     return [
-      'What do my recent test results mean?',
-      'How can I improve my hormone levels?',
-      'What should I focus on this week?',
+      'What do my recent test results mean',
+      'How can I improve my hormone balance',
+      'What habits would optimize my scores',
     ];
   }
 
   // New user with no tests
   return [
-    'How do I get started with testing?',
-    'What hormones should I track?',
-    'What affects my hormone levels?',
+    'How do I get started with testing',
+    'What hormones should I track first',
+    'What lifestyle factors affect hormones most',
   ];
 }
 
 /**
  * Fallback generic questions when AI generation fails
+ * These are diverse, actionable questions a user would ask
  */
 function getGenericSuggestedQuestions(): string[] {
   const allQuestions = [
-    'What affects cortisol levels most?',
-    'How can I improve my sleep?',
-    'What supplements should I consider?',
-    'How often should I test?',
-    'What does my trend mean?',
-    'How can I reduce stress?',
-    'What exercise is best for hormones?',
-    'How does diet affect testosterone?',
-    'What time should I test?',
+    'What habits help lower cortisol naturally',
+    'How does sleep quality affect testosterone',
+    'What supplements support healthy DHEA levels',
+    'When is the best time to test hormones',
+    'How can I improve my ReadyScore',
+    'What foods boost testosterone naturally',
+    'How does stress impact hormone balance',
+    'What exercise helps optimize hormones',
+    'How much sleep do I need for hormones',
+    'What are signs of hormone imbalance',
+    'How can I track my progress effectively',
+    'What lifestyle changes improve BioAge',
   ];
 
   // Randomly pick 3
