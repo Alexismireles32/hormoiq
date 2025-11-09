@@ -14,25 +14,31 @@ import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 
 export default function SignIn() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+    if (!code || code.length !== 3) {
+      Alert.alert('Error', 'Please enter a 3-digit code');
       return;
     }
 
     setLoading(true);
+    
+    // Simple code-based auth for testing
+    // Format: code@hormoiq.test (e.g., 332@hormoiq.test)
+    const testEmail = `${code}@hormoiq.test`;
+    const testPassword = `test${code}`;
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: testEmail,
+      password: testPassword,
     });
+    
     setLoading(false);
 
     if (error) {
-      Alert.alert('Sign In Error', error.message);
+      Alert.alert('Sign In Error', 'Code not found. Please sign up first.');
     } else {
       router.replace('/(tabs)');
     }
@@ -45,24 +51,19 @@ export default function SignIn() {
     >
       <View style={styles.content}>
         <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to continue</Text>
+        <Text style={styles.subtitle}>Enter your 3-digit code</Text>
 
         <TextInput
           style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          placeholderTextColor="#999"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
+          placeholder="Enter 3-digit code (e.g., 332)"
+          value={code}
+          onChangeText={(text) => {
+            // Only allow numbers and max 3 digits
+            const numericText = text.replace(/[^0-9]/g, '').slice(0, 3);
+            setCode(numericText);
+          }}
+          keyboardType="number-pad"
+          maxLength={3}
           placeholderTextColor="#999"
         />
 

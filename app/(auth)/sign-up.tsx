@@ -14,40 +14,38 @@ import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 
 export default function SignUp() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async () => {
-    if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
-
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+    if (!code || code.length !== 3) {
+      Alert.alert('Error', 'Please enter a 3-digit code');
       return;
     }
 
     setLoading(true);
+    
+    // Simple code-based registration for testing
+    // Format: code@hormoiq.test (e.g., 332@hormoiq.test)
+    const testEmail = `${code}@hormoiq.test`;
+    const testPassword = `test${code}`;
+
     const { error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: testEmail,
+      password: testPassword,
+      options: {
+        emailRedirectTo: undefined, // Skip email verification for testing
+      },
     });
+    
     setLoading(false);
 
     if (error) {
       Alert.alert('Sign Up Error', error.message);
     } else {
       Alert.alert(
-        'Success',
-        'Account created! Please check your email to verify your account.',
+        'Success! 🎉',
+        `Your code ${code} is registered! You can now sign in.`,
         [
           {
             text: 'OK',
@@ -65,33 +63,19 @@ export default function SignUp() {
     >
       <View style={styles.content}>
         <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Sign up to get started</Text>
+        <Text style={styles.subtitle}>Choose your 3-digit code</Text>
 
         <TextInput
           style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          placeholderTextColor="#999"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          placeholderTextColor="#999"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
+          placeholder="Enter 3-digit code (e.g., 332)"
+          value={code}
+          onChangeText={(text) => {
+            // Only allow numbers and max 3 digits
+            const numericText = text.replace(/[^0-9]/g, '').slice(0, 3);
+            setCode(numericText);
+          }}
+          keyboardType="number-pad"
+          maxLength={3}
           placeholderTextColor="#999"
         />
 

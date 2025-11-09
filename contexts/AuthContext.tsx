@@ -41,17 +41,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setIsAnonymous(session?.user?.is_anonymous ?? false);
-        setLoading(false);
-      } else {
-        // Auto sign-in anonymously if no session
-        const { data, error } = await supabase.auth.signInAnonymously();
-        if (!error && data.session) {
-          setSession(data.session);
-          setUser(data.session.user);
-          setIsAnonymous(true);
-        }
-        setLoading(false);
       }
+      // Removed auto anonymous sign-in for testing - require code-based login
+      setLoading(false);
     });
 
     // Listen for auth changes
