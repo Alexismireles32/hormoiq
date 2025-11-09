@@ -15,6 +15,8 @@ import { Protocol, UserProtocol } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import * as Haptics from 'expo-haptics';
+import { AuroraBackground } from '@/components/AuroraBackground';
+import { DesignSystem } from '@/constants/DesignSystem';
 
 type FilterType = 'all' | Protocol['category'];
 
@@ -152,8 +154,9 @@ export default function ProtocolsScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <AuroraBackground showRadialGradient={true}>
+      <View style={styles.container}>
+        {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Protocols</Text>
         <Text style={styles.subtitle}>
@@ -369,13 +372,14 @@ export default function ProtocolsScreen() {
         )}
       </Modal>
     </View>
+    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    // backgroundColor removed for Aurora
   },
   header: {
     padding: 24,

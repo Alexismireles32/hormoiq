@@ -23,6 +23,7 @@ import {
 } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { DesignSystem } from '@/constants/DesignSystem';
+import { AuroraBackground } from '@/components/AuroraBackground';
 
 const HORMONE_COLORS = {
   cortisol: DesignSystem.colors.hormones.cortisol,      // Soft blue-gray
@@ -187,7 +188,8 @@ export default function TrackScreen() {
   const screenWidth = Dimensions.get('window').width;
 
   return (
-    <View style={styles.container}>
+    <AuroraBackground showRadialGradient={true}>
+      <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -451,13 +453,14 @@ export default function TrackScreen() {
       <View style={{ height: 40 }} />
     </ScrollView>
     </View>
+    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.neutral[50],
+    // backgroundColor removed for Aurora
   },
   header: {
     flexDirection: 'row',

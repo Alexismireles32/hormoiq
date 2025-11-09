@@ -17,6 +17,7 @@ import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { exportUserData, deleteAllUserData, generateDataSummary } from '@/lib/dataExport';
+import { AuroraBackground } from '@/components/AuroraBackground';
 
 export default function ProfileScreen() {
   const { user, signOut, isAnonymous } = useAuth();
@@ -199,14 +200,17 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={DesignSystem.colors.primary[500]} />
-      </View>
+      <AuroraBackground showRadialGradient={true}>
+        <View style={[styles.container, styles.centered]}>
+          <ActivityIndicator size="large" color={DesignSystem.colors.primary[500]} />
+        </View>
+      </AuroraBackground>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <AuroraBackground showRadialGradient={true}>
+      <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -447,13 +451,14 @@ export default function ProfileScreen() {
         <View style={{ height: DesignSystem.spacing[12] }} />
       </ScrollView>
     </View>
+    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.neutral[50],
+    // backgroundColor removed for Aurora
   },
   centered: {
     justifyContent: 'center',
