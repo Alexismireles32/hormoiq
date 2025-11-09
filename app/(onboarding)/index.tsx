@@ -58,29 +58,43 @@ export default function OnboardingScreen() {
     setLoading(true);
 
     try {
-      // Create or update user profile
-      const { data, error } = await supabase.from('users').upsert(
-        {
-          id: user.id,
-          email: user.email,
-          age: age,
-          gender: biologicalSex,
-          on_hormone_therapy: onHormoneTherapy === 'yes',
-          hormone_therapy_unknown: onHormoneTherapy === 'not_sure',
-          onboarding_completed: true,
-        },
-        { 
-          onConflict: 'id',
-          ignoreDuplicates: false  // Force update instead of ignoring
-        }
-      );
+      // First, try to check if user exists
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .single();
 
-      if (error) {
-        console.error('Onboarding upsert error:', JSON.stringify(error, null, 2));
-        throw error;
+      const userData = {
+        id: user.id,
+        email: user.email,
+        age: age,
+        gender: biologicalSex,
+        on_hormone_therapy: onHormoneTherapy === 'yes',
+        hormone_therapy_unknown: onHormoneTherapy === 'not_sure',
+        onboarding_completed: true,
+      };
+
+      let result;
+      if (existingUser) {
+        // Update existing user
+        result = await supabase
+          .from('users')
+          .update(userData)
+          .eq('id', user.id);
+      } else {
+        // Insert new user
+        result = await supabase
+          .from('users')
+          .insert(userData);
       }
 
-      console.log('Onboarding successful:', data);
+      if (result.error) {
+        console.error('Onboarding error:', JSON.stringify(result.error, null, 2));
+        throw result.error;
+      }
+
+      console.log('Onboarding successful!');
       
       // Navigate to main app
       router.replace('/(tabs)');
@@ -113,29 +127,43 @@ export default function OnboardingScreen() {
           onPress: async () => {
             setLoading(true);
             try {
-              // Set minimal defaults for anonymous users
-              const { data, error } = await supabase.from('users').upsert(
-                {
-                  id: user.id,
-                  email: user.email,
-                  age: 30, // Default
-                  gender: 'male', // Default
-                  on_hormone_therapy: false,
-                  hormone_therapy_unknown: false,
-                  onboarding_completed: true,
-                },
-                { 
-                  onConflict: 'id',
-                  ignoreDuplicates: false  // Force update
-                }
-              );
+              // Check if user exists
+              const { data: existingUser } = await supabase
+                .from('users')
+                .select('id')
+                .eq('id', user.id)
+                .single();
 
-              if (error) {
-                console.error('Skip onboarding upsert error:', JSON.stringify(error, null, 2));
-                throw error;
+              const userData = {
+                id: user.id,
+                email: user.email,
+                age: 30, // Default
+                gender: 'male', // Default
+                on_hormone_therapy: false,
+                hormone_therapy_unknown: false,
+                onboarding_completed: true,
+              };
+
+              let result;
+              if (existingUser) {
+                // Update existing user
+                result = await supabase
+                  .from('users')
+                  .update(userData)
+                  .eq('id', user.id);
+              } else {
+                // Insert new user
+                result = await supabase
+                  .from('users')
+                  .insert(userData);
+              }
+
+              if (result.error) {
+                console.error('Skip onboarding error:', JSON.stringify(result.error, null, 2));
+                throw result.error;
               }
               
-              console.log('Skip onboarding successful:', data);
+              console.log('Skip onboarding successful!');
               router.replace('/(tabs)');
             } catch (error) {
               console.error('Skip onboarding catch error:', error);
