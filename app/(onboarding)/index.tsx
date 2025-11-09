@@ -59,7 +59,7 @@ export default function OnboardingScreen() {
 
     try {
       // Create or update user profile
-      const { error } = await supabase.from('users').upsert(
+      const { data, error } = await supabase.from('users').upsert(
         {
           id: user.id,
           email: user.email,
@@ -75,11 +75,17 @@ export default function OnboardingScreen() {
         }
       );
 
-      if (error) throw error;
+      if (error) {
+        console.error('Onboarding upsert error:', JSON.stringify(error, null, 2));
+        throw error;
+      }
 
+      console.log('Onboarding successful:', data);
+      
       // Navigate to main app
       router.replace('/(tabs)');
     } catch (error) {
+      console.error('Onboarding catch error:', error);
       showErrorAlert(error, 'Onboarding Error');
     } finally {
       setLoading(false);
@@ -108,7 +114,7 @@ export default function OnboardingScreen() {
             setLoading(true);
             try {
               // Set minimal defaults for anonymous users
-              const { error } = await supabase.from('users').upsert(
+              const { data, error } = await supabase.from('users').upsert(
                 {
                   id: user.id,
                   email: user.email,
@@ -124,9 +130,15 @@ export default function OnboardingScreen() {
                 }
               );
 
-              if (error) throw error;
+              if (error) {
+                console.error('Skip onboarding upsert error:', JSON.stringify(error, null, 2));
+                throw error;
+              }
+              
+              console.log('Skip onboarding successful:', data);
               router.replace('/(tabs)');
             } catch (error) {
+              console.error('Skip onboarding catch error:', error);
               showErrorAlert(error, 'Skip Onboarding Error');
             } finally {
               setLoading(false);
