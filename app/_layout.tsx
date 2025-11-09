@@ -140,14 +140,17 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AnimatedBackground>
-        <Stack>
+        <Stack screenOptions={{ contentStyle: { backgroundColor: 'transparent' } }}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(legal)" options={{ headerShown: false }} />
+          <Stack.Screen name="(legal)/privacy" options={{ headerShown: false }} />
+          <Stack.Screen name="(legal)/terms" options={{ headerShown: false }} />
           <Stack.Screen name="admin" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
           <Stack.Screen name="test" options={{ headerShown: false }} />
+          <Stack.Screen name="help/index" options={{ headerShown: false }} />
+          <Stack.Screen name="help/article" options={{ headerShown: false }} />
         </Stack>
       </AnimatedBackground>
     </ThemeProvider>

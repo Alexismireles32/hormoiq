@@ -18,8 +18,9 @@ export default function TabLayout() {
         tabBarActiveTintColor: DesignSystem.colors.primary[500],
         tabBarInactiveTintColor: DesignSystem.colors.neutral[400],
         headerShown: false,
+        sceneStyle: { backgroundColor: 'transparent' }, // Allow animated background to show through
         tabBarStyle: {
-          backgroundColor: DesignSystem.colors.oura.cardBackground,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)', // Semi-transparent tab bar
           borderTopWidth: 1,
           borderTopColor: DesignSystem.colors.oura.cardBorder,
           height: 80,

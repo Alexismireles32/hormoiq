@@ -542,7 +542,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.neutral[50],  // Off-white cream
+    backgroundColor: 'transparent',  // Allow animated background to show through
   },
   centered: {
     justifyContent: 'center',
