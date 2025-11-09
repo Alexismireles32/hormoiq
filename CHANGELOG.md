@@ -447,6 +447,41 @@ If continuing in a new chat, here's what's been completed and what might be next
 
 ---
 
+## ✅ **FIXED: Feature Visibility & Insights Error (Nov 9, 2025 - 1:00 AM)**
+
+### **Issue 1**: Insights tab crashed with "Cannot read property 'icon' of undefined"
+Navigating to Insights tab caused immediate crash.
+
+### **Root Cause**
+`EmptyStateIllustration` was missing the `no_insights` type in its content dictionary.
+
+### **Solution**
+Added `no_insights` type with icon 💡 and appropriate content.
+
+**Files Modified**:
+- `components/EmptyStateIllustration.tsx`: Added no_insights type
+
+---
+
+### **Issue 2**: Features not visible on home page
+User couldn't see ReadyScore, BioAge, Impact, ASK™, or Protocols on first app open.
+
+### **Root Cause**
+Features only displayed after user had logged tests. New users with no tests saw only empty state with no feature preview.
+
+### **Solution**
+Added "What You'll Unlock" section to empty state with 6 feature preview cards showing:
+- What each feature does
+- When it unlocks (1st test, 5 tests, 10 tests, or available now)
+- Animated entrance with staggered delays
+
+**Files Modified**:
+- `app/(tabs)/index.tsx`: Added feature preview grid with unlock requirements
+
+**Status**: ✅ All features now visible from first app open, Insights tab works perfectly
+
+---
+
 ## ✅ **FIXED: Dashboard Render Error (Nov 9, 2025 - 12:45 AM)**
 
 ### **Issue**: `TypeError: getGreeting is not a function`
