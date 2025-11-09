@@ -25,39 +25,61 @@ export default function SignUp() {
 
     setLoading(true);
     
-    // Simple code-based registration for testing
-    // Format: code@test.hormoiq.com (valid email format)
-    const testEmail = `${code}@test.hormoiq.com`;
-    const testPassword = `test${code}123!`; // Meet password requirements
+    try {
+      // Use phone number format to bypass email validation
+      // Format: +1555000{code} (e.g., +15550000333)
+      const testPhone = `+1555000${code.padStart(4, '0')}`;
+      const testPassword = `Test${code}!2024`;
 
-    const { error } = await supabase.auth.signUp({
-      email: testEmail,
-      password: testPassword,
-      options: {
-        emailRedirectTo: undefined,
-        data: {
-          test_user: true,
-          code: code,
-        }
-      },
-    });
+      // First, try to sign up with phone
+      const { data, error } = await supabase.auth.signUp({
+        phone: testPhone,
+        password: testPassword,
+        options: {
+          data: {
+            test_user: true,
+            code: code,
+          }
+        },
+      });
+
+      if (error) {
+        // If phone fails, fall back to email with explicit domain
+        console.log('Phone signup failed, trying email:', error.message);
+        const testEmail = `test${code}@hormoiq.app`;
+        const { error: emailError } = await supabase.auth.signUp({
+          email: testEmail,
+          password: testPassword,
+          options: {
+            emailRedirectTo: undefined,
+            data: {
+              test_user: true,
+              code: code,
+            }
+          },
+        });
+        
+        if (emailError) throw emailError;
+      }
+    } catch (error: any) {
+      setLoading(false);
+      Alert.alert('Sign Up Error', error.message || 'Failed to create account');
+      return;
+    }
     
     setLoading(false);
-
-    if (error) {
-      Alert.alert('Sign Up Error', error.message);
-    } else {
-      Alert.alert(
-        'Success! 🎉',
-        `Your code ${code} is registered! You can now sign in.`,
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/(auth)/sign-in'),
-          },
-        ]
-      );
-    }
+    
+    // Success!
+    Alert.alert(
+      'Success! 🎉',
+      `Your code ${code} is registered! You can now sign in.`,
+      [
+        {
+          text: 'OK',
+          onPress: () => router.replace('/(auth)/sign-in'),
+        },
+      ]
+    );
   };
 
   return (

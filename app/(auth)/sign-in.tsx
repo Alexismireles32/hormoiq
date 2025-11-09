@@ -25,23 +25,34 @@ export default function SignIn() {
 
     setLoading(true);
     
-    // Simple code-based auth for testing
-    // Format: code@test.hormoiq.com (valid email format)
-    const testEmail = `${code}@test.hormoiq.com`;
-    const testPassword = `test${code}123!`;
+    try {
+      // Try phone number first (matches sign-up)
+      const testPhone = `+1555000${code.padStart(4, '0')}`;
+      const testPassword = `Test${code}!2024`;
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: testEmail,
-      password: testPassword,
-    });
+      const { error } = await supabase.auth.signInWithPassword({
+        phone: testPhone,
+        password: testPassword,
+      });
+
+      if (error) {
+        // Fall back to email
+        const testEmail = `test${code}@hormoiq.app`;
+        const { error: emailError } = await supabase.auth.signInWithPassword({
+          email: testEmail,
+          password: testPassword,
+        });
+        
+        if (emailError) throw emailError;
+      }
+    } catch (error: any) {
+      setLoading(false);
+      Alert.alert('Sign In Error', 'Code not found. Please sign up first.');
+      return;
+    }
     
     setLoading(false);
-
-    if (error) {
-      Alert.alert('Sign In Error', 'Code not found. Please sign up first.');
-    } else {
-      router.replace('/(tabs)');
-    }
+    // Success - navigation handled by AuthContext
   };
 
   return (
