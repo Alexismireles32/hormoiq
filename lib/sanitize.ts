@@ -1,38 +1,35 @@
 /**
  * Content Sanitization Utilities
  * Protects against XSS and malicious content in user-generated and AI-generated text
+ * React Native compatible - no DOM dependencies
  */
-
-import DOMPurify from 'dompurify';
 
 /**
  * Sanitize HTML content to prevent XSS attacks
- * Used for AI responses and any user-generated content
+ * React Native version - strips HTML tags
  */
 export function sanitizeHTML(dirty: string): string {
   if (!dirty) return '';
   
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li'],
-    ALLOWED_ATTR: [],
-    ALLOW_DATA_ATTR: false,
-    RETURN_DOM: false,
-    RETURN_DOM_FRAGMENT: false,
-  });
+  // Remove HTML tags - React Native doesn't render HTML anyway
+  return dirty.replace(/<[^>]*>/g, '');
 }
 
 /**
- * Sanitize plain text (removes all HTML)
+ * Sanitize plain text (removes all HTML and special characters)
  * Used for fields that should contain no markup
  */
 export function sanitizeText(text: string): string {
   if (!text) return '';
   
-  return DOMPurify.sanitize(text, {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
-    RETURN_DOM: false,
-  });
+  // Remove HTML tags
+  let clean = text.replace(/<[^>]*>/g, '');
+  
+  // Remove script-like content
+  clean = clean.replace(/javascript:/gi, '');
+  clean = clean.replace(/on\w+\s*=/gi, '');
+  
+  return clean;
 }
 
 /**

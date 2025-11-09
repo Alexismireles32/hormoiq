@@ -20,8 +20,6 @@
     "@react-native-community/slider": "^5.1.1",
     "@react-navigation/native": "^7.1.8",
     "@supabase/supabase-js": "^2.80.0",
-    "@types/dompurify": "^3.0.5",
-    "dompurify": "^3.3.0",
     "expo": "~54.0.23",
     "expo-constants": "~18.0.10",
     "expo-file-system": "^19.0.17",
