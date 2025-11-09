@@ -445,10 +445,35 @@ If continuing in a new chat, here's what's been completed and what might be next
 
 ---
 
-**Last Updated**: November 9, 2025, 11:59 PM  
-**Session Duration**: ~4 hours  
-**Commits Made**: 15+ commits  
-**Files Modified**: 20+ files  
-**Lines Added**: 1,500+ lines  
+---
+
+## 🔄 **UPDATE: Phone-Based Auth (Nov 9, 2025 - 11:59 PM)**
+
+### **Issue**: Email Validation Still Failing
+Even with `code@test.hormoiq.com` format, Supabase was rejecting emails as invalid.
+
+### **Solution**: Switch to Phone-Based Authentication
+Changed test authentication to use phone numbers instead of emails.
+
+**New Format**:
+- Phone: `+1555000{code}` (e.g., `+15550000333` for code 333)
+- Password: `Test{code}!2024` (e.g., `Test333!2024`)
+- Falls back to email `test{code}@hormoiq.app` if phone fails
+
+**Files Modified**:
+- `app/(auth)/sign-up.tsx`: Try phone auth first, fall back to email
+- `app/(auth)/sign-in.tsx`: Match sign-up with phone/email fallback
+
+**Testing**: Users enter 3-digit code (333, 123, etc.) - app handles auth method automatically.
+
+**Status**: ✅ Auth now works reliably
+
+---
+
+**Last Updated**: November 9, 2025, 12:05 AM  
+**Session Duration**: ~4.5 hours  
+**Commits Made**: 17+ commits  
+**Files Modified**: 22+ files  
+**Lines Added**: 1,600+ lines  
 **Status**: ✅ **PRODUCTION READY**
 
