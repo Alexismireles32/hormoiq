@@ -1,57 +1,76 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
-
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import { DesignSystem } from '@/constants/DesignSystem';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
   color: string;
 }) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+  return <FontAwesome size={22} style={{ marginBottom: -3 }} {...props} />;
 }
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: DesignSystem.colors.primary[500],
+        tabBarInactiveTintColor: DesignSystem.colors.neutral[400],
         headerShown: false,
-        tabBarStyle: { display: 'none' }, // Hide tab bar completely
+        tabBarStyle: {
+          backgroundColor: DesignSystem.colors.oura.cardBackground,
+          borderTopWidth: 1,
+          borderTopColor: DesignSystem.colors.oura.cardBorder,
+          height: 80,
+          paddingBottom: 24,
+          paddingTop: 8,
+          ...DesignSystem.shadows.sm,
+        },
+        tabBarLabelStyle: {
+          fontSize: DesignSystem.typography.fontSize.xs,
+          fontWeight: DesignSystem.typography.fontWeight.medium,
+          marginTop: 4,
+        },
       }}>
-      {/* Main Dashboard - Only visible screen */}
+      {/* Main Tabs - Visible in Tab Bar */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          href: null, // Still accessible but not in tab bar
+          title: 'Home',
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
         }}
       />
       
-      {/* All other screens accessible via navigation only */}
+      <Tabs.Screen
+        name="insights"
+        options={{
+          title: 'Insights',
+          tabBarIcon: ({ color }) => <TabBarIcon name="line-chart" color={color} />,
+        }}
+      />
+
       <Tabs.Screen
         name="track"
         options={{
-          title: 'Test History',
-          href: null,
+          title: 'Track',
+          tabBarIcon: ({ color }) => <TabBarIcon name="bar-chart" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="protocols"
-        options={{
-          title: 'Protocols',
-          href: null,
-        }}
-      />
+
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
+          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+        }}
+      />
+
+      {/* Hidden Screens - Accessible via navigation only */}
+      <Tabs.Screen
+        name="protocols"
+        options={{
+          title: 'Protocols',
           href: null,
         }}
       />
