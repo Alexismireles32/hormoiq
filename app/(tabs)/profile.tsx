@@ -688,12 +688,12 @@ const styles = StyleSheet.create({
   helpButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    backgroundColor: DesignSystem.colors.surface,
     borderRadius: DesignSystem.radius.lg,
     padding: DesignSystem.spacing[4],
     marginBottom: DesignSystem.spacing[3],
     borderWidth: 1,
-    borderColor: DesignSystem.colors.oura.cardBorder,
+    borderColor: DesignSystem.colors.neutral[200],
     ...DesignSystem.shadows.sm,
   },
   helpIcon: {

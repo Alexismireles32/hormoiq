@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
     paddingBottom: DesignSystem.spacing[6],
     backgroundColor: DesignSystem.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: DesignSystem.colors.oura.cardBorder,
+    borderBottomColor: DesignSystem.colors.neutral[200],
   },
   headerTitle: {
     fontSize: DesignSystem.typography.fontSize['3xl'],
