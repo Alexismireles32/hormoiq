@@ -2,73 +2,27 @@ import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
+  View,
+  Text,
   RefreshControl,
-  View as RNView,
-  ActivityIndicator,
-  Dimensions,
+  Image,
 } from 'react-native';
-import { Text, View } from '@/components/Themed';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { ReadyCardEnhanced as ReadyCard } from '@/components/ReadyCardEnhanced';
-import { BioAgeCard } from '@/components/BioAgeCard';
-import { SwipeableScoreCards } from '@/components/SwipeableScoreCards';
-import { TestScheduleCard } from '@/components/TestScheduleCard';
-import { FeatureExplainer, FeatureType } from '@/components/FeatureExplainer';
-import { SkeletonLoader, SkeletonCard, SkeletonScoreCard } from '@/components/SkeletonLoader';
-import { EmptyStateIllustration } from '@/components/EmptyStateIllustration';
-import { ProgressTracker } from '@/components/ProgressTracker';
-import { GuidedTour, defaultTourSteps } from '@/components/GuidedTour';
-import { FirstTestTutorial } from '@/components/FirstTestTutorial';
-import { AnimatedTouchable } from '@/components/AnimatedTouchable';
-import { AnimatedCard } from '@/components/AnimatedCard';
-import AnimatedGreeting from '@/components/AnimatedGreeting';
+import { EliAnimatedBackground } from '@/components/EliAnimatedBackground';
+import { EliCircularProgress } from '@/components/EliCircularProgress';
 import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
+import { calculateReadyScore } from '@/lib/ready';
+import { calculateBioAge } from '@/lib/bioage';
 import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const { width } = Dimensions.get('window');
+/**
+ * Main Dashboard - Eli Health Style
+ * Soft gradients, circular progress, minimalist design
+ */
 
-const HORMONES = [
-  { type: 'cortisol', name: 'Cortisol', icon: '💧', color: DesignSystem.colors.hormones.cortisol },
-  { type: 'testosterone', name: 'Testosterone', icon: '⚡', color: DesignSystem.colors.hormones.testosterone },
-  { type: 'dhea', name: 'DHEA', icon: '🔥', color: DesignSystem.colors.hormones.dhea },
-] as const;
-
-const FEATURES = [
-  {
-    id: 'impact',
-    name: 'IMPACT™',
-    description: 'See what works for you',
-    icon: '🎯',
-    backgroundColor: DesignSystem.colors.success.light,  // Soft green
-    route: '/impact' as const,
-    type: 'impact' as FeatureType,
-  },
-  {
-    id: 'protocols',
-    name: 'Protocols',
-    description: 'Optimization plans',
-    icon: '📋',
-    backgroundColor: DesignSystem.colors.warning.light,  // Soft amber
-    route: '/protocols' as const,
-    type: 'protocols' as FeatureType,
-  },
-  {
-    id: 'ask',
-    name: 'ASK™',
-    description: 'AI Hormone Coach',
-    icon: '🤖',
-    backgroundColor: DesignSystem.colors.primary[100],  // Soft purple
-    route: '/ask' as const,
-    type: 'ask' as FeatureType,
-  },
-];
-
-// Helper function for greeting
 const getGreeting = () => {
   const hour = new Date().getHours();
   if (hour < 12) return 'Good Morning';
@@ -84,59 +38,15 @@ export default function DashboardScreen() {
   const [userGender, setUserGender] = useState<'male' | 'female' | 'other'>('male');
   const [userAge, setUserAge] = useState(30);
   const [userName, setUserName] = useState<string>('');
-  const [showExplainer, setShowExplainer] = useState(false);
-  const [currentFeature, setCurrentFeature] = useState<FeatureType>('test');
-  const [showTour, setShowTour] = useState(false);
-  const [showTestTutorial, setShowTestTutorial] = useState(false);
 
   useEffect(() => {
     loadData();
-    checkFirstTime();
   }, []);
-
-  const checkFirstTime = async () => {
-    try {
-      const tourCompleted = await AsyncStorage.getItem('tour_completed');
-      if (!tourCompleted && tests.length === 0) {
-        // Show tour after a brief delay for better UX
-        setTimeout(() => {
-          setShowTour(true);
-        }, 1000);
-      }
-    } catch (error) {
-      console.error('Error checking first time:', error);
-    }
-  };
-
-  const handleTourComplete = async () => {
-    try {
-      await AsyncStorage.setItem('tour_completed', 'true');
-      setShowTour(false);
-      // Optionally show test tutorial after tour
-      setTimeout(() => {
-        setShowTestTutorial(true);
-      }, 500);
-    } catch (error) {
-      console.error('Error saving tour completion:', error);
-    }
-  };
-
-  const handleTutorialClose = async () => {
-    try {
-      await AsyncStorage.setItem('tutorial_seen', 'true');
-      setShowTestTutorial(false);
-    } catch (error) {
-      console.error('Error saving tutorial seen:', error);
-    }
-  };
-
-  const handleStartFirstTest = () => {
-    setShowTestTutorial(false);
-    router.push('/test');
-  };
 
   const loadData = async () => {
     if (!user) return;
+    
+    setLoading(true);
     try {
       // Load tests
       const { data: testsData, error: testsError } = await supabase
@@ -144,18 +54,19 @@ export default function DashboardScreen() {
         .select('*')
         .eq('user_id', user.id)
         .order('timestamp', { ascending: false });
+
       if (testsError) throw testsError;
-      setTests((testsData as HormoneTest[]) || []);
+      setTests(testsData || []);
 
       // Load user profile
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('gender, age')
+        .select('biological_sex, age')
         .eq('id', user.id)
         .single();
-      if (userError) throw userError;
+
       if (userData) {
-        setUserGender(userData.gender || 'male');
+        setUserGender(userData.biological_sex || 'male');
         setUserAge(userData.age || 30);
       }
 
@@ -169,742 +80,423 @@ export default function DashboardScreen() {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    loadData();
+    await loadData();
+    setRefreshing(false);
   };
 
-  const handleHormoneSelect = (hormoneType: string) => {
+  const handleLogTest = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push({
-      pathname: '/test/input',
-      params: { hormone: hormoneType },
-    });
-  };
-
-  const handleFeaturePress = (route: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push(route as any);
+    router.push('/test');
   };
 
   const handleProfilePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push('/profile');
+    router.push('/(tabs)/profile');
   };
 
-  const handleShowExplainer = (feature: FeatureType) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setCurrentFeature(feature);
-    setShowExplainer(true);
+  // Calculate hormone values for display
+  const getLatestHormoneValue = (hormoneType: 'cortisol' | 'testosterone' | 'progesterone') => {
+    const hormoneTests = tests.filter(t => t.hormone_type === hormoneType);
+    if (hormoneTests.length === 0) return null;
+    
+    // Get most recent
+    return hormoneTests[0].value;
   };
 
-  // Show skeleton loaders while loading
+  const getHormoneStatus = (value: number | null, hormoneType: string) => {
+    if (!value) return 'No data';
+    
+    // Simple status based on value ranges
+    if (hormoneType === 'cortisol') {
+      if (value >= 5 && value <= 20) return 'Optimal';
+      if (value < 5) return 'Low';
+      return 'High';
+    } else if (hormoneType === 'testosterone') {
+      if (userGender === 'male') {
+        if (value >= 300 && value <= 900) return 'Optimal';
+        if (value < 300) return 'Low';
+        return 'High';
+      } else {
+        if (value >= 15 && value <= 70) return 'Optimal';
+        if (value < 15) return 'Low';
+        return 'High';
+      }
+    } else if (hormoneType === 'progesterone') {
+      if (userGender === 'male') {
+        if (value >= 0.2 && value <= 1.5) return 'Optimal';
+        if (value < 0.2) return 'Low';
+        return 'High';
+      } else {
+        if (value >= 5 && value <= 25) return 'Optimal';
+        if (value < 5) return 'Low';
+        return 'High';
+      }
+    }
+    return 'Unknown';
+  };
+
+  const getLastTestTime = (hormoneType: string) => {
+    const hormoneTests = tests.filter(t => t.hormone_type === hormoneType);
+    if (hormoneTests.length === 0) return null;
+    
+    const date = new Date(hormoneTests[0].timestamp);
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  };
+
+  // Calculate ReadyScore
+  const readyData = tests.length > 0 ? calculateReadyScore(tests, userGender) : null;
+
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header Skeleton */}
-          <RNView style={styles.header}>
-            <RNView>
-              <SkeletonLoader width={120} height={16} style={{ marginBottom: 8 }} />
-              <SkeletonLoader width={150} height={28} />
-            </RNView>
-            <SkeletonLoader
-              width={48}
-              height={48}
-              borderRadius={DesignSystem.radius.full}
-            />
-          </RNView>
-
-          {/* Score Card Skeletons */}
-          <SkeletonScoreCard />
-          
-          {/* Quick Actions Skeleton */}
-          <RNView style={styles.section}>
-            <SkeletonLoader width={100} height={20} style={{ marginBottom: 16 }} />
-            <RNView style={styles.quickActions}>
-              {[1, 2, 3].map((i) => (
-                <SkeletonLoader
-                  key={i}
-                  width={(width - DesignSystem.spacing[6] * 2 - DesignSystem.spacing[3] * 2) / 3}
-                  height={100}
-                  borderRadius={DesignSystem.radius.xl}
-                />
-              ))}
-            </RNView>
-          </RNView>
-
-          {/* Feature Cards Skeleton */}
-          <RNView style={styles.section}>
-            <SkeletonLoader width={140} height={24} style={{ marginBottom: 16 }} />
-            <RNView style={styles.featureGrid}>
-              {[1, 2, 3].map((i) => (
-                <SkeletonCard key={i} />
-              ))}
-            </RNView>
-          </RNView>
-        </ScrollView>
-      </View>
+      <EliAnimatedBackground type="multi" scrollEnabled={false}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </EliAnimatedBackground>
     );
   }
 
-  // Show welcome message for users with no tests (but still show full dashboard!)
-  const hasNoTests = tests.length === 0;
-
   return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {/* Header */}
-        {/* Animated Greeting */}
-        <AnimatedGreeting 
-          userName={userName || 'User'} 
-          style={styles.greetingCard}
-        />
-
-        {/* Settings Button */}
-        <RNView style={styles.settingsRow}>
-          <TouchableOpacity
-            style={styles.settingsButton}
-            onPress={handleProfilePress}
-          >
-            <Text style={styles.settingsIcon}>⚙️</Text>
-            <Text style={styles.settingsText}>Settings</Text>
+    <EliAnimatedBackground type="multi">
+      <View style={styles.content}>
+        {/* Header with profile */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>{getGreeting()},</Text>
+            <Text style={styles.userName}>{userName}</Text>
+          </View>
+          <TouchableOpacity onPress={handleProfilePress}>
+            <View style={styles.profilePhoto}>
+              <Text style={styles.profilePhotoText}>{userName.charAt(0).toUpperCase()}</Text>
+            </View>
           </TouchableOpacity>
-        </RNView>
+        </View>
 
-        {/* Welcome Banner for New Users */}
-        {hasNoTests && (
-          <AnimatedCard delay={0} style={styles.welcomeBanner}>
-            <Text style={styles.welcomeIcon}>👋</Text>
-            <Text style={styles.welcomeTitle}>Welcome to HormoIQ!</Text>
-            <Text style={styles.welcomeText}>
-              Your test strips are on the way. While you wait, explore the features below. 
-              Everything is ready for you—just log your first test when your strips arrive!
-            </Text>
-            <TouchableOpacity
-              style={styles.welcomeButton}
-              onPress={() => router.push('/test')}
+        {/* Hormone Cards */}
+        <View style={styles.cardSection}>
+          {/* Cortisol Card */}
+          <View style={[styles.hormoneCard, { backgroundColor: DesignSystem.colors.hormones.cortisol }]}>
+            <TouchableOpacity 
+              style={styles.cardInner}
+              onPress={() => router.push('/test/input?hormone=cortisol')}
               activeOpacity={0.7}
             >
-              <Text style={styles.welcomeButtonText}>Preview Test Input</Text>
+              <View style={styles.cardHeader}>
+                <Text style={styles.hormoneLabel}>Cortisol</Text>
+                <Text style={styles.cardArrow}>→</Text>
+              </View>
+              
+              {getLatestHormoneValue('cortisol') ? (
+                <>
+                  <EliCircularProgress
+                    value={Math.min(100, (getLatestHormoneValue('cortisol')! / 30) * 100)}
+                    size={140}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.hormoneStatus}>
+                    {getHormoneStatus(getLatestHormoneValue('cortisol'), 'cortisol')}
+                  </Text>
+                  <Text style={styles.hormoneTime}>
+                    {getLastTestTime('cortisol')}
+                  </Text>
+                </>
+              ) : (
+                <View style={styles.noDataContainer}>
+                  <Text style={styles.noDataText}>No data yet</Text>
+                  <Text style={styles.noDataSubtext}>Tap to log first test</Text>
+                </View>
+              )}
             </TouchableOpacity>
-          </AnimatedCard>
-        )}
+          </View>
 
-        {/* Test Schedule Card */}
-        {user && (
-          <RNView style={styles.section}>
-            <TestScheduleCard userId={user.id} />
-          </RNView>
-        )}
-
-        {/* Swipeable Score Cards - Oura Style */}
-        <SwipeableScoreCards>
-          {/* READYSCORE™ Card */}
-          <RNView>
-            <RNView style={styles.sectionHeader}>
-              <Text style={styles.featureName}>READYSCORE™</Text>
-              <TouchableOpacity
-                style={styles.infoButton}
-                onPress={() => handleShowExplainer('readyscore')}
-              >
-                <Text style={styles.infoIcon}>ℹ️</Text>
-              </TouchableOpacity>
-            </RNView>
-            <ReadyCard tests={tests} userGender={userGender} />
-          </RNView>
-
-          {/* BIOAGE™ Card */}
-          <RNView>
-            <RNView style={styles.sectionHeader}>
-              <Text style={styles.featureName}>BIOAGE™</Text>
-              <TouchableOpacity
-                style={styles.infoButton}
-                onPress={() => handleShowExplainer('bioage')}
-              >
-                <Text style={styles.infoIcon}>ℹ️</Text>
-              </TouchableOpacity>
-            </RNView>
-            <BioAgeCard
-              tests={tests}
-              chronologicalAge={userAge}
-              userGender={userGender}
-            />
-          </RNView>
-
-          {/* IMPACT™ Card - Summary */}
-          <RNView>
-            <RNView style={styles.sectionHeader}>
-              <Text style={styles.featureName}>IMPACT™</Text>
-              <TouchableOpacity
-                style={styles.infoButton}
-                onPress={() => handleShowExplainer('impact')}
-              >
-                <Text style={styles.infoIcon}>ℹ️</Text>
-              </TouchableOpacity>
-            </RNView>
-            <TouchableOpacity
-              style={styles.impactCard}
-              onPress={() => handleFeaturePress('/impact')}
+          {/* Progesterone Card */}
+          <View style={[styles.hormoneCard, { backgroundColor: DesignSystem.colors.hormones.progesterone }]}>
+            <TouchableOpacity 
+              style={styles.cardInner}
+              onPress={() => router.push('/test/input?hormone=progesterone')}
               activeOpacity={0.7}
             >
-              <Text style={styles.impactIcon}>🎯</Text>
-              <Text style={styles.impactTitle}>What Works For You</Text>
-              <Text style={styles.impactDescription}>
-                Track interventions and see what actually moves the needle on your hormones
-              </Text>
-              <RNView style={styles.impactCTA}>
-                <Text style={styles.impactCTAText}>View Insights</Text>
-                <Text style={styles.impactArrow}>→</Text>
-              </RNView>
+              <View style={styles.cardHeader}>
+                <Text style={styles.hormoneLabel}>Progesterone</Text>
+                <Text style={styles.cardArrow}>→</Text>
+              </View>
+              
+              {getLatestHormoneValue('progesterone') ? (
+                <>
+                  <EliCircularProgress
+                    value={Math.min(100, (getLatestHormoneValue('progesterone')! / (userGender === 'male' ? 5 : 40)) * 100)}
+                    size={140}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.hormoneStatus}>
+                    {getHormoneStatus(getLatestHormoneValue('progesterone'), 'progesterone')}
+                  </Text>
+                  <Text style={styles.hormoneTime}>
+                    {getLastTestTime('progesterone')}
+                  </Text>
+                </>
+              ) : (
+                <View style={styles.noDataContainer}>
+                  <Text style={styles.noDataText}>No data yet</Text>
+                  <Text style={styles.noDataSubtext}>Tap to log first test</Text>
+                </View>
+              )}
             </TouchableOpacity>
-          </RNView>
-        </SwipeableScoreCards>
+          </View>
 
-        {/* Progress Tracker - Gamification */}
-        <RNView style={styles.section}>
-          <ProgressTracker tests={tests} userAge={userAge} />
-        </RNView>
-
-        {/* Quick TEST™ Actions - Prominent CTA */}
-        <RNView style={styles.section}>
-          <RNView style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Log Your Test</Text>
-            <TouchableOpacity
-              style={styles.infoButton}
-              onPress={() => handleShowExplainer('test')}
+          {/* Testosterone Card */}
+          <View style={[styles.hormoneCard, { backgroundColor: DesignSystem.colors.hormones.testosterone }]}>
+            <TouchableOpacity 
+              style={styles.cardInner}
+              onPress={() => router.push('/test/input?hormone=testosterone')}
+              activeOpacity={0.7}
             >
-              <Text style={styles.infoIcon}>ℹ️</Text>
+              <View style={styles.cardHeader}>
+                <Text style={styles.hormoneLabel}>Testosterone</Text>
+                <Text style={styles.cardArrow}>→</Text>
+              </View>
+              
+              {getLatestHormoneValue('testosterone') ? (
+                <>
+                  <EliCircularProgress
+                    value={Math.min(100, (getLatestHormoneValue('testosterone')! / (userGender === 'male' ? 1200 : 100)) * 100)}
+                    size={140}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.hormoneStatus}>
+                    {getHormoneStatus(getLatestHormoneValue('testosterone'), 'testosterone')}
+                  </Text>
+                  <Text style={styles.hormoneTime}>
+                    {getLastTestTime('testosterone')}
+                  </Text>
+                </>
+              ) : (
+                <View style={styles.noDataContainer}>
+                  <Text style={styles.noDataText}>No data yet</Text>
+                  <Text style={styles.noDataSubtext}>Tap to log first test</Text>
+                </View>
+              )}
             </TouchableOpacity>
-          </RNView>
-          
-          {/* Last Test Time */}
-          {tests.length > 0 && (
-            <Text style={styles.lastTestInfo}>
-              Last test:{' '}
-              {(() => {
-                const lastTest = new Date(tests[0].timestamp);
-                const now = new Date();
-                const diffMs = now.getTime() - lastTest.getTime();
-                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-                const diffMins = Math.floor(diffMs / (1000 * 60));
-                
-                if (diffHrs < 1) {
-                  return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
-                } else if (diffHrs < 24) {
-                  return `${diffHrs} hour${diffHrs !== 1 ? 's' : ''} ago`;
-                } else {
-                  const diffDays = Math.floor(diffHrs / 24);
-                  return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-                }
-              })()}
-            </Text>
-          )}
-          
-          <Text style={styles.sectionSubtitle}>Choose a hormone to log</Text>
-          <RNView style={styles.quickActions}>
-            {HORMONES.map((hormone, index) => (
-              <AnimatedCard key={hormone.type} index={index} style={{ flex: 1 }}>
-                <AnimatedTouchable
-                  style={styles.quickActionButton}
-                  onPress={() => handleHormoneSelect(hormone.type)}
-                  hapticStyle={Haptics.ImpactFeedbackStyle.Medium}
-                >
-                  <RNView style={[styles.hormoneDot, { backgroundColor: hormone.color }]} />
-                  <Text style={styles.quickActionIcon}>{hormone.icon}</Text>
-                  <Text style={styles.quickActionText}>{hormone.name}</Text>
-                </AnimatedTouchable>
-              </AnimatedCard>
-            ))}
-          </RNView>
-        </RNView>
+          </View>
+        </View>
 
-        {/* Feature Grid - Oura Style with Pastel Backgrounds */}
-        <RNView style={styles.section}>
-          <Text style={styles.sectionTitle}>Explore Features</Text>
-          <RNView style={styles.featureGrid}>
-            {FEATURES.map((feature, index) => (
-              <AnimatedCard key={feature.id} index={index + 3} style={{ flex: 1 }}>
-                <AnimatedTouchable
-                  style={styles.featureCard}
-                  onPress={() => handleFeaturePress(feature.route)}
-                  scaleValue={0.98}
-                >
-                  <RNView style={styles.featureCardHeader}>
-                    <RNView style={[styles.iconCircle, { backgroundColor: feature.backgroundColor }]}>
-                      <Text style={styles.featureIcon}>{feature.icon}</Text>
-                    </RNView>
-                    <TouchableOpacity
-                      style={styles.featureInfoButton}
-                      onPress={() => handleShowExplainer(feature.type)}
-                    >
-                      <Text style={styles.featureInfoIcon}>ℹ️</Text>
-                    </TouchableOpacity>
-                  </RNView>
-                  <Text style={styles.featureCardName}>{feature.name}</Text>
-                  <Text style={styles.featureCardDescription}>{feature.description}</Text>
-                </AnimatedTouchable>
-              </AnimatedCard>
-            ))}
-          </RNView>
-        </RNView>
-
-        {/* Quick Stats */}
-        <RNView style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Progress</Text>
-          <RNView style={styles.statsGrid}>
-            <RNView style={styles.statCard}>
-              <Text style={styles.statValue}>{tests.length}</Text>
-              <Text style={styles.statLabel}>Total Tests</Text>
-            </RNView>
-            <RNView style={styles.statCard}>
-              <Text style={styles.statValue}>
-                {tests.filter(t => {
-                  const testDate = new Date(t.timestamp);
-                  const weekAgo = new Date();
-                  weekAgo.setDate(weekAgo.getDate() - 7);
-                  return testDate >= weekAgo;
-                }).length}
-              </Text>
-              <Text style={styles.statLabel}>This Week</Text>
-            </RNView>
-            <RNView style={styles.statCard}>
-              <Text style={styles.statValue}>
-                {new Set(tests.map(t => new Date(t.timestamp).toDateString())).size}
-              </Text>
-              <Text style={styles.statLabel}>Days Tracked</Text>
-            </RNView>
-          </RNView>
-        </RNView>
-
-        {/* Tip Section */}
-        <RNView style={styles.tipSection}>
-          <Text style={styles.tipIcon}>💡</Text>
-          <Text style={styles.tipTitle}>Optimization Tip</Text>
-          <Text style={styles.tipText}>
-            Test your hormones at the same time each day for the most consistent tracking and better insights from READYSCORE™.
+        {/* Marketing CTA */}
+        <View style={styles.ctaSection}>
+          <Text style={styles.ctaText}>
+            Understand your{'\n'}hormonal health
           </Text>
-        </RNView>
+          <TouchableOpacity
+            style={styles.ctaButton}
+            onPress={handleLogTest}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.ctaButtonText}>Log a test</Text>
+          </TouchableOpacity>
+        </View>
 
-        <RNView style={{ height: DesignSystem.spacing[20] }} />
-      </ScrollView>
+        <View style={{ height: 100 }} />
+      </View>
 
-      {/* Floating TEST™ Button - Oura Style (Solid Color) */}
-      <AnimatedTouchable
-        style={styles.fab}
-        onPress={() => router.push('/test')}
-        hapticStyle={Haptics.ImpactFeedbackStyle.Heavy}
-        scaleValue={0.94}
-      >
-        <Text style={styles.fabIcon}>🧪</Text>
-        <Text style={styles.fabText}>TEST™</Text>
-      </AnimatedTouchable>
+      {/* Bottom Navigation with large center button */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push('/(tabs)')}>
+          <Text style={styles.navIcon}>🏠</Text>
+          <Text style={styles.navLabel}>Home</Text>
+        </TouchableOpacity>
 
-      {/* Feature Explainer Modal */}
-      <FeatureExplainer
-        visible={showExplainer}
-        feature={currentFeature}
-        onClose={() => setShowExplainer(false)}
-      />
+        <TouchableOpacity style={styles.centerButton} onPress={handleLogTest}>
+          <Text style={styles.centerButtonIcon}>+</Text>
+        </TouchableOpacity>
 
-      {/* Guided Tour - shown after first login */}
-      <GuidedTour
-        visible={showTour}
-        onComplete={handleTourComplete}
-        steps={defaultTourSteps}
-      />
-
-      {/* First Test Tutorial - shown after tour or manually */}
-      <FirstTestTutorial
-        visible={showTestTutorial}
-        onClose={handleTutorialClose}
-        onStartTest={handleStartFirstTest}
-      />
-    </View>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push('/(tabs)/insights')}>
+          <Text style={styles.navIcon}>📊</Text>
+          <Text style={styles.navLabel}>Insights</Text>
+        </TouchableOpacity>
+      </View>
+    </EliAnimatedBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.neutral[50],  // Off-white cream
-  },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: DesignSystem.spacing[6],
-    paddingTop: DesignSystem.spacing[12],
-  },
-  greetingCard: {
-    marginBottom: DesignSystem.spacing[6],
-  },
-  settingsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginBottom: DesignSystem.spacing[6],
-  },
-  settingsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: DesignSystem.spacing[3],
-    paddingHorizontal: DesignSystem.spacing[5],
-    backgroundColor: DesignSystem.colors.surface,
-    borderRadius: DesignSystem.radius.full,
-    borderWidth: 1,
-    borderColor: DesignSystem.colors.neutral[200],
-    ...DesignSystem.shadows.sm,
-  },
-  settingsIcon: {
-    fontSize: 18,
-    marginRight: DesignSystem.spacing[2],
-  },
-  settingsText: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.medium,
-    color: DesignSystem.colors.neutral[700],
-  },
-  section: {
-    marginBottom: DesignSystem.spacing[8],
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: DesignSystem.spacing[3],
-  },
-  featureName: {
-    fontSize: DesignSystem.typography.fontSize.xs,
-    fontWeight: DesignSystem.typography.fontWeight.regular,  // Lighter
-    color: DesignSystem.colors.neutral[500],
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
-  infoButton: {
-    width: 28,
-    height: 28,
-    borderRadius: DesignSystem.radius.full,
-    backgroundColor: DesignSystem.colors.oura.subtleBackground,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  infoIcon: {
-    fontSize: 14,
-  },
-  sectionTitle: {
-    fontSize: DesignSystem.typography.fontSize.lg,
-    fontWeight: DesignSystem.typography.fontWeight.medium,  // Lighter
-    color: DesignSystem.colors.neutral[900],
-    marginBottom: DesignSystem.spacing[4],
-  },
-  sectionSubtitle: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
-    color: DesignSystem.colors.neutral[500],
-    marginBottom: DesignSystem.spacing[4],
-  },
-  lastTestInfo: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.medium,
-    color: DesignSystem.colors.primary[500],
-    marginBottom: DesignSystem.spacing[2],
-    paddingHorizontal: DesignSystem.spacing[1],
-  },
-  quickActions: {
-    flexDirection: 'row',
-    gap: DesignSystem.spacing[3],
-  },
-  quickActionButton: {
-    flex: 1,
-    padding: DesignSystem.spacing[5],
-    borderRadius: DesignSystem.radius.xl,
-    borderWidth: 1,
-    borderColor: DesignSystem.colors.oura.cardBorder,
-    backgroundColor: DesignSystem.colors.oura.cardBackground,
-    alignItems: 'center',
-    ...DesignSystem.shadows.sm,
-  },
-  hormoneDot: {
-    width: 8,
-    height: 8,
-    borderRadius: DesignSystem.radius.full,
-    position: 'absolute',
-    top: DesignSystem.spacing[3],
-    right: DesignSystem.spacing[3],
-  },
-  quickActionIcon: {
-    fontSize: 32,
-    marginBottom: DesignSystem.spacing[2],
-  },
-  quickActionText: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.regular,  // Lighter
-    color: DesignSystem.colors.neutral[700],
-    textAlign: 'center',
-  },
-  featureGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: DesignSystem.spacing[3],
-  },
-  featureCard: {
-    width: (width - DesignSystem.spacing[6] * 2 - DesignSystem.spacing[3]) / 2,
-    backgroundColor: DesignSystem.colors.oura.cardBackground,
-    borderWidth: 1,
-    borderColor: DesignSystem.colors.oura.cardBorder,
-    borderRadius: DesignSystem.radius.xl,
-    padding: DesignSystem.spacing[5],
-    ...DesignSystem.shadows.sm,
-  },
-  featureCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: DesignSystem.spacing[3],
-  },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: DesignSystem.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  featureIcon: {
-    fontSize: 24,
-  },
-  featureInfoButton: {
-    width: 24,
-    height: 24,
-    borderRadius: DesignSystem.radius.full,
-    backgroundColor: DesignSystem.colors.oura.subtleBackground,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  featureInfoIcon: {
-    fontSize: 12,
-  },
-  featureCardName: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.medium,  // Lighter
-    color: DesignSystem.colors.neutral[900],
-    marginBottom: DesignSystem.spacing[1],
-  },
-  featureCardDescription: {
-    fontSize: DesignSystem.typography.fontSize.xs,
-    fontWeight: DesignSystem.typography.fontWeight.light,  // Light weight
-    color: DesignSystem.colors.neutral[600],
-    lineHeight: DesignSystem.typography.fontSize.xs * 1.6,
-  },
-  // Impact Card Styles
-  impactCard: {
-    padding: 32,
-    borderRadius: 24,
-    backgroundColor: DesignSystem.colors.oura.cardBackground,
-    borderWidth: 1,
-    borderColor: DesignSystem.colors.oura.cardBorder,
-    marginBottom: 24,
-    ...DesignSystem.shadows.sm,
-    alignItems: 'center',
-  },
-  impactIcon: {
-    fontSize: 48,
-    marginBottom: DesignSystem.spacing[3],
-  },
-  impactTitle: {
-    fontSize: DesignSystem.typography.fontSize.xl,
-    fontWeight: DesignSystem.typography.fontWeight.medium,
-    color: DesignSystem.colors.neutral[900],
-    marginBottom: DesignSystem.spacing[2],
-    textAlign: 'center',
-  },
-  impactDescription: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.light,
-    color: DesignSystem.colors.neutral[600],
-    textAlign: 'center',
-    marginBottom: DesignSystem.spacing[5],
-    lineHeight: DesignSystem.typography.fontSize.sm * 1.6,
-  },
-  impactCTA: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: DesignSystem.spacing[2],
-  },
-  impactCTAText: {
+  loadingText: {
     fontSize: DesignSystem.typography.fontSize.base,
-    fontWeight: DesignSystem.typography.fontWeight.medium,
-    color: DesignSystem.colors.primary[500],
+    color: DesignSystem.colors.text.secondary,
   },
-  impactArrow: {
-    fontSize: DesignSystem.typography.fontSize.lg,
-    color: DesignSystem.colors.primary[500],
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: DesignSystem.spacing[3],
-  },
-  statCard: {
+  content: {
     flex: 1,
-    backgroundColor: DesignSystem.colors.oura.cardBackground,
-    borderWidth: 1,
-    borderColor: DesignSystem.colors.oura.cardBorder,
-    borderRadius: DesignSystem.radius.lg,
-    padding: DesignSystem.spacing[5],
-    alignItems: 'center',
-    ...DesignSystem.shadows.sm,
+    paddingHorizontal: 24,
+    paddingTop: 60,
   },
-  statValue: {
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 32,
+  },
+  greeting: {
+    fontFamily: DesignSystem.typography.fontFamily.serif,
     fontSize: DesignSystem.typography.fontSize['2xl'],
-    fontWeight: '200',  // Very thin like Oura
-    color: DesignSystem.colors.primary[500],
-    marginBottom: DesignSystem.spacing[1],
+    fontStyle: 'italic',
+    color: DesignSystem.colors.text.secondary,
+    marginBottom: 4,
   },
-  statLabel: {
-    fontSize: DesignSystem.typography.fontSize.xs,
-    color: DesignSystem.colors.neutral[500],
-    textAlign: 'center',
-    fontWeight: DesignSystem.typography.fontWeight.light,
+  userName: {
+    fontFamily: DesignSystem.typography.fontFamily.serif,
+    fontSize: DesignSystem.typography.fontSize['2xl'],
+    fontStyle: 'italic',
+    color: DesignSystem.colors.text.primary,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
   },
-  tipSection: {
-    backgroundColor: DesignSystem.colors.primary[50],
-    borderRadius: DesignSystem.radius.xl,
-    padding: DesignSystem.spacing[6],
-    borderWidth: 1,
-    borderColor: DesignSystem.colors.primary[100],
+  profilePhoto: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: DesignSystem.colors.text.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  tipIcon: {
-    fontSize: 28,
-    marginBottom: DesignSystem.spacing[2],
+  profilePhotoText: {
+    color: DesignSystem.colors.surface,
+    fontSize: DesignSystem.typography.fontSize.lg,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
   },
-  tipTitle: {
+  cardSection: {
+    gap: 20,
+  },
+  hormoneCard: {
+    borderRadius: 24,
+    padding: 24,
+    minHeight: 280,
+  },
+  cardInner: {
+    flex: 1,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  hormoneLabel: {
+    fontSize: DesignSystem.typography.fontSize.lg,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.text.primary,
+  },
+  cardArrow: {
+    fontSize: DesignSystem.typography.fontSize['2xl'],
+    color: DesignSystem.colors.text.primary,
+  },
+  hormoneStatus: {
     fontSize: DesignSystem.typography.fontSize.base,
     fontWeight: DesignSystem.typography.fontWeight.medium,
-    color: DesignSystem.colors.neutral[900],
-    marginBottom: DesignSystem.spacing[2],
+    color: DesignSystem.colors.text.primary,
+    textAlign: 'center',
+    marginTop: 12,
   },
-  tipText: {
+  hormoneTime: {
     fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.light,
-    color: DesignSystem.colors.neutral[700],
-    lineHeight: DesignSystem.typography.fontSize.sm * 1.6,
+    color: DesignSystem.colors.text.secondary,
+    textAlign: 'center',
+    marginTop: 4,
   },
-  fab: {
+  noDataContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  noDataText: {
+    fontSize: DesignSystem.typography.fontSize.lg,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.text.secondary,
+    marginBottom: 8,
+  },
+  noDataSubtext: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    color: DesignSystem.colors.text.tertiary,
+  },
+  ctaSection: {
+    marginTop: 40,
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  ctaText: {
+    fontFamily: DesignSystem.typography.fontFamily.serif,
+    fontSize: DesignSystem.typography.fontSize['3xl'],
+    fontStyle: 'italic',
+    color: DesignSystem.colors.text.primary,
+    textAlign: 'center',
+    lineHeight: DesignSystem.typography.fontSize['3xl'] * 1.3,
+    marginBottom: 24,
+  },
+  ctaButton: {
+    backgroundColor: DesignSystem.colors.text.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 48,
+    borderRadius: 30,
+    minHeight: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ctaButtonText: {
+    fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.surface,
+  },
+  bottomNav: {
     position: 'absolute',
-    bottom: DesignSystem.spacing[6],
-    right: DesignSystem.spacing[6],
-    backgroundColor: DesignSystem.colors.primary[500],
-    borderRadius: DesignSystem.radius.full,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 90,
+    backgroundColor: DesignSystem.colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: DesignSystem.colors.neutral[200],
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: DesignSystem.spacing[4],
-    paddingHorizontal: DesignSystem.spacing[6],
-    ...DesignSystem.shadows.lg,
+    justifyContent: 'space-around',
+    paddingBottom: 20,
   },
-  fabIcon: {
-    fontSize: 20,
-    marginRight: DesignSystem.spacing[2],
+  navButton: {
+    alignItems: 'center',
+    paddingVertical: 8,
   },
-  fabText: {
-    fontSize: DesignSystem.typography.fontSize.sm,
+  navIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  navLabel: {
+    fontSize: DesignSystem.typography.fontSize.xs,
+    color: DesignSystem.colors.text.secondary,
     fontWeight: DesignSystem.typography.fontWeight.medium,
-    color: DesignSystem.colors.neutral[0],
   },
-  // Welcome Banner Styles (for new users)
-  welcomeBanner: {
-    backgroundColor: DesignSystem.colors.primary[50],
-    borderRadius: DesignSystem.radius.xl,
-    borderWidth: 1,
-    borderColor: DesignSystem.colors.primary[100],
-    padding: DesignSystem.spacing[6],
-    marginBottom: DesignSystem.spacing[6],
+  centerButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: DesignSystem.colors.text.primary,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  welcomeIcon: {
-    fontSize: 48,
-    marginBottom: DesignSystem.spacing[3],
-  },
-  welcomeTitle: {
-    fontSize: DesignSystem.typography.fontSize.xl,
-    fontWeight: DesignSystem.typography.fontWeight.semibold,
-    color: DesignSystem.colors.neutral[900],
-    marginBottom: DesignSystem.spacing[2],
-    textAlign: 'center',
-  },
-  welcomeText: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.light,
-    color: DesignSystem.colors.neutral[700],
-    textAlign: 'center',
-    lineHeight: DesignSystem.typography.fontSize.sm * 1.6,
-    marginBottom: DesignSystem.spacing[4],
-  },
-  welcomeButton: {
-    backgroundColor: DesignSystem.colors.primary[500],
-    borderRadius: DesignSystem.radius.lg,
-    paddingVertical: DesignSystem.spacing[3],
-    paddingHorizontal: DesignSystem.spacing[6],
-  },
-  welcomeButtonText: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.semibold,
-    color: DesignSystem.colors.neutral[0],
-  },
-  // Feature Preview Styles (for empty state)
-  featurePreviewGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginTop: DesignSystem.spacing[4],
-  },
-  featurePreviewCard: {
-    width: '48%',
-    backgroundColor: DesignSystem.colors.oura.cardBackground,
-    borderRadius: DesignSystem.radius.xl,
-    borderWidth: 1,
-    borderColor: DesignSystem.colors.oura.cardBorder,
-    padding: DesignSystem.spacing[4],
-    marginBottom: DesignSystem.spacing[4],
-    ...DesignSystem.shadows.sm,
-  },
-  featurePreviewIcon: {
+  centerButtonIcon: {
     fontSize: 32,
-    marginBottom: DesignSystem.spacing[2],
-  },
-  featurePreviewName: {
-    fontSize: DesignSystem.typography.fontSize.sm,
-    fontWeight: DesignSystem.typography.fontWeight.semibold,
-    color: DesignSystem.colors.neutral[900],
-    marginBottom: DesignSystem.spacing[1],
-  },
-  featurePreviewDesc: {
-    fontSize: DesignSystem.typography.fontSize.xs,
+    color: DesignSystem.colors.surface,
     fontWeight: DesignSystem.typography.fontWeight.light,
-    color: DesignSystem.colors.neutral[600],
-    lineHeight: DesignSystem.typography.fontSize.xs * 1.5,
-    marginBottom: DesignSystem.spacing[2],
-  },
-  featurePreviewUnlock: {
-    fontSize: DesignSystem.typography.fontSize.xs,
-    fontWeight: DesignSystem.typography.fontWeight.medium,
-    color: DesignSystem.colors.primary[600],
   },
 });
