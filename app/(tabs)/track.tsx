@@ -1,6 +1,10 @@
 import { BioAgeCard } from '@/components/BioAgeCard';
 import { EmptyState } from '@/components/EmptyState';
 import { Loading } from '@/components/Loading';
+import { MiniChart } from '@/components/MiniChart';
+import { DataSummary, SummaryItem } from '@/components/DataSummary';
+import { AnimatedCard } from '@/components/AnimatedCard';
+import { AnimatedTouchable } from '@/components/AnimatedTouchable';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
@@ -214,20 +218,33 @@ export default function TrackScreen() {
         userGender={userGender}
       />
 
-      {/* Summary Stats */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statBox}>
-          <Text style={styles.statValue}>{stats.total}</Text>
-          <Text style={styles.statLabel}>Total Tests</Text>
-        </View>
-        <View style={styles.statBox}>
-          <Text style={styles.statValue}>{stats.thisWeek}</Text>
-          <Text style={styles.statLabel}>This Week</Text>
-        </View>
-        <View style={styles.statBox}>
-          <Text style={styles.statValue}>{stats.streak} 🔥</Text>
-          <Text style={styles.statLabel}>Day Streak</Text>
-        </View>
+      {/* Summary Stats with DataSummary Component */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Overview</Text>
+        <DataSummary
+          items={[
+            {
+              label: 'Total Tests',
+              value: stats.total,
+              icon: '📊',
+              subtitle: 'All time',
+            },
+            {
+              label: 'This Week',
+              value: stats.thisWeek,
+              icon: '📅',
+              trend: stats.thisWeek >= 3 ? 'up' : stats.thisWeek > 0 ? 'neutral' : 'down',
+            },
+            {
+              label: 'Streak',
+              value: `${stats.streak}`,
+              icon: '🔥',
+              subtitle: stats.streak > 0 ? 'days' : 'Start today!',
+              color: stats.streak >= 7 ? DesignSystem.colors.success.DEFAULT : undefined,
+            },
+          ]}
+          columns={3}
+        />
       </View>
 
       {/* Hormone Filter */}
