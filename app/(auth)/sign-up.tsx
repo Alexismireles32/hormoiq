@@ -26,40 +26,26 @@ export default function SignUp() {
     setLoading(true);
     
     try {
-      // Use phone number format to bypass email validation
-      // Format: +1555000{code} (e.g., +15550000333)
-      const testPhone = `+1555000${code.padStart(4, '0')}`;
-      const testPassword = `Test${code}!2024`;
+      // Simple test registration with just code
+      // Use a dummy but valid email format that Supabase accepts
+      const testEmail = `user${code}@test-hormoiq.local`;
+      const testPassword = `TestPass${code}!2024`;
 
-      // First, try to sign up with phone
       const { data, error } = await supabase.auth.signUp({
-        phone: testPhone,
+        email: testEmail,
         password: testPassword,
         options: {
+          emailRedirectTo: undefined,
           data: {
             test_user: true,
-            code: code,
+            test_code: code,
+            display_name: `User ${code}`,
           }
         },
       });
 
       if (error) {
-        // If phone fails, fall back to email with explicit domain
-        console.log('Phone signup failed, trying email:', error.message);
-        const testEmail = `test${code}@hormoiq.app`;
-        const { error: emailError } = await supabase.auth.signUp({
-          email: testEmail,
-          password: testPassword,
-          options: {
-            emailRedirectTo: undefined,
-            data: {
-              test_user: true,
-              code: code,
-            }
-          },
-        });
-        
-        if (emailError) throw emailError;
+        throw error;
       }
     } catch (error: any) {
       setLoading(false);

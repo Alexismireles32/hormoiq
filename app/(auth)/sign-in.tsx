@@ -26,24 +26,17 @@ export default function SignIn() {
     setLoading(true);
     
     try {
-      // Try phone number first (matches sign-up)
-      const testPhone = `+1555000${code.padStart(4, '0')}`;
-      const testPassword = `Test${code}!2024`;
+      // Match the sign-up format
+      const testEmail = `user${code}@test-hormoiq.local`;
+      const testPassword = `TestPass${code}!2024`;
 
       const { error } = await supabase.auth.signInWithPassword({
-        phone: testPhone,
+        email: testEmail,
         password: testPassword,
       });
 
       if (error) {
-        // Fall back to email
-        const testEmail = `test${code}@hormoiq.app`;
-        const { error: emailError } = await supabase.auth.signInWithPassword({
-          email: testEmail,
-          password: testPassword,
-        });
-        
-        if (emailError) throw emailError;
+        throw error;
       }
     } catch (error: any) {
       setLoading(false);
