@@ -282,6 +282,89 @@ export default function DashboardScreen() {
             secondaryActionLabel="How to Use Test Strips"
             onSecondaryActionPress={() => setShowTestTutorial(true)}
           />
+
+          {/* Preview of Features - What You'll Unlock */}
+          <RNView style={styles.section}>
+            <Text style={styles.sectionTitle}>What You'll Unlock</Text>
+            <Text style={styles.sectionSubtitle}>
+              These powerful features activate as you log tests
+            </Text>
+
+            {/* Feature Preview Cards */}
+            <RNView style={styles.featurePreviewGrid}>
+              {/* ReadyScore */}
+              <AnimatedCard delay={0} style={styles.featurePreviewCard}>
+                <Text style={styles.featurePreviewIcon}>🎯</Text>
+                <Text style={styles.featurePreviewName}>READYSCORE™</Text>
+                <Text style={styles.featurePreviewDesc}>
+                  Daily readiness score from your hormone levels
+                </Text>
+                <Text style={styles.featurePreviewUnlock}>
+                  ✓ Unlocks with 1st test
+                </Text>
+              </AnimatedCard>
+
+              {/* BioAge */}
+              <AnimatedCard delay={100} style={styles.featurePreviewCard}>
+                <Text style={styles.featurePreviewIcon}>🧬</Text>
+                <Text style={styles.featurePreviewName}>BIOAGE™</Text>
+                <Text style={styles.featurePreviewDesc}>
+                  Your hormonal age vs. calendar age
+                </Text>
+                <Text style={styles.featurePreviewUnlock}>
+                  Unlocks with 5 tests
+                </Text>
+              </AnimatedCard>
+
+              {/* Impact */}
+              <AnimatedCard delay={200} style={styles.featurePreviewCard}>
+                <Text style={styles.featurePreviewIcon}>📈</Text>
+                <Text style={styles.featurePreviewName}>IMPACT™</Text>
+                <Text style={styles.featurePreviewDesc}>
+                  See what interventions work for you
+                </Text>
+                <Text style={styles.featurePreviewUnlock}>
+                  Unlocks with 10 tests
+                </Text>
+              </AnimatedCard>
+
+              {/* ASK AI */}
+              <AnimatedCard delay={300} style={styles.featurePreviewCard}>
+                <Text style={styles.featurePreviewIcon}>🤖</Text>
+                <Text style={styles.featurePreviewName}>ASK™ AI</Text>
+                <Text style={styles.featurePreviewDesc}>
+                  Personal hormone coach powered by GPT-4
+                </Text>
+                <Text style={styles.featurePreviewUnlock}>
+                  ✓ Available now
+                </Text>
+              </AnimatedCard>
+
+              {/* Protocols */}
+              <AnimatedCard delay={400} style={styles.featurePreviewCard}>
+                <Text style={styles.featurePreviewIcon}>📋</Text>
+                <Text style={styles.featurePreviewName}>Protocols</Text>
+                <Text style={styles.featurePreviewDesc}>
+                  Evidence-based optimization plans
+                </Text>
+                <Text style={styles.featurePreviewUnlock}>
+                  ✓ Available now
+                </Text>
+              </AnimatedCard>
+
+              {/* Track */}
+              <AnimatedCard delay={500} style={styles.featurePreviewCard}>
+                <Text style={styles.featurePreviewIcon}>📊</Text>
+                <Text style={styles.featurePreviewName}>Track</Text>
+                <Text style={styles.featurePreviewDesc}>
+                  View all your test history & trends
+                </Text>
+                <Text style={styles.featurePreviewUnlock}>
+                  ✓ Available now
+                </Text>
+              </AnimatedCard>
+            </RNView>
+          </RNView>
         </ScrollView>
 
         {/* Feature Explainer Modal */}
@@ -290,6 +373,20 @@ export default function DashboardScreen() {
           feature={currentFeature}
           onClose={() => setShowExplainer(false)}
         />
+
+        {/* Guided Tour */}
+        {showTour && (
+          <GuidedTour
+            steps={defaultTourSteps}
+            onComplete={handleTourComplete}
+            onSkip={handleTourComplete}
+          />
+        )}
+
+        {/* First Test Tutorial */}
+        {showTestTutorial && (
+          <FirstTestTutorial onClose={() => setShowTestTutorial(false)} />
+        )}
       </View>
     );
   }
@@ -836,5 +933,44 @@ const styles = StyleSheet.create({
     fontSize: DesignSystem.typography.fontSize.sm,
     fontWeight: DesignSystem.typography.fontWeight.medium,
     color: DesignSystem.colors.neutral[0],
+  },
+  // Feature Preview Styles (for empty state)
+  featurePreviewGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginTop: DesignSystem.spacing[4],
+  },
+  featurePreviewCard: {
+    width: '48%',
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    borderRadius: DesignSystem.radius.xl,
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
+    padding: DesignSystem.spacing[4],
+    marginBottom: DesignSystem.spacing[4],
+    ...DesignSystem.shadows.sm,
+  },
+  featurePreviewIcon: {
+    fontSize: 32,
+    marginBottom: DesignSystem.spacing[2],
+  },
+  featurePreviewName: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.neutral[900],
+    marginBottom: DesignSystem.spacing[1],
+  },
+  featurePreviewDesc: {
+    fontSize: DesignSystem.typography.fontSize.xs,
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[600],
+    lineHeight: DesignSystem.typography.fontSize.xs * 1.5,
+    marginBottom: DesignSystem.spacing[2],
+  },
+  featurePreviewUnlock: {
+    fontSize: DesignSystem.typography.fontSize.xs,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.primary[600],
   },
 });

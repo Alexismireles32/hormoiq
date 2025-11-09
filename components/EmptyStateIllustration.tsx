@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics';
 export type EmptyStateType = 
   | 'no_tests'
   | 'no_data'
+  | 'no_insights'
   | 'feature_locked'
   | 'coming_soon'
   | 'error'
@@ -32,6 +33,11 @@ const DEFAULT_CONTENT = {
     icon: '📊',
     title: 'No Data Available',
     description: 'Add more tests to see trends and patterns in your hormone levels.',
+  },
+  no_insights: {
+    icon: '💡',
+    title: 'No Insights Yet',
+    description: 'Start logging tests to unlock powerful insights about your hormonal health.',
   },
   feature_locked: {
     icon: '🔒',
