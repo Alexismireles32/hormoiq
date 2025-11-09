@@ -26,9 +26,9 @@ export default function SignIn() {
     setLoading(true);
     
     // Simple code-based auth for testing
-    // Format: code@hormoiq.test (e.g., 332@hormoiq.test)
-    const testEmail = `${code}@hormoiq.test`;
-    const testPassword = `test${code}`;
+    // Format: code@test.hormoiq.com (valid email format)
+    const testEmail = `${code}@test.hormoiq.com`;
+    const testPassword = `test${code}123!`;
 
     const { error } = await supabase.auth.signInWithPassword({
       email: testEmail,

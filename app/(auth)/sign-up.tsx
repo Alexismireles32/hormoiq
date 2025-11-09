@@ -26,15 +26,19 @@ export default function SignUp() {
     setLoading(true);
     
     // Simple code-based registration for testing
-    // Format: code@hormoiq.test (e.g., 332@hormoiq.test)
-    const testEmail = `${code}@hormoiq.test`;
-    const testPassword = `test${code}`;
+    // Format: code@test.hormoiq.com (valid email format)
+    const testEmail = `${code}@test.hormoiq.com`;
+    const testPassword = `test${code}123!`; // Meet password requirements
 
     const { error } = await supabase.auth.signUp({
       email: testEmail,
       password: testPassword,
       options: {
-        emailRedirectTo: undefined, // Skip email verification for testing
+        emailRedirectTo: undefined,
+        data: {
+          test_user: true,
+          code: code,
+        }
       },
     });
     
