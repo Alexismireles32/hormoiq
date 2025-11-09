@@ -251,6 +251,11 @@ export async function getNextTest(userId: string): Promise<TestScheduleEvent | n
       // No rows found - user has completed all tests
       return null;
     }
+    if (error.code === 'PGRST205') {
+      // Table doesn't exist yet - database migration needed
+      // Silently return null until schema is deployed
+      return null;
+    }
     console.error('Error fetching next test:', error);
     return null;
   }
@@ -316,12 +321,13 @@ export async function getScheduleAdherence(userId: string): Promise<{
   adherenceRate: number; // 0-100%
   daysRemaining: number;
 }> {
-  const { data: allTests } = await supabase
+  const { data: allTests, error } = await supabase
     .from('test_schedule_events')
     .select('*')
     .eq('user_id', userId);
   
-  if (!allTests || allTests.length === 0) {
+  // Handle missing table or no data
+  if (error?.code === 'PGRST205' || !allTests || allTests.length === 0) {
     return {
       totalTests: 0,
       completedTests: 0,
@@ -380,6 +386,11 @@ export async function detectSkippedTests(userId: string): Promise<TestScheduleEv
     .lte('scheduled_date', yesterdayStr);
   
   if (error) {
+    if (error.code === 'PGRST205') {
+      // Table doesn't exist yet - database migration needed
+      // Silently return empty array until schema is deployed
+      return [];
+    }
     console.error('Error detecting skipped tests:', error);
     return [];
   }
