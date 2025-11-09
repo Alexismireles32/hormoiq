@@ -84,11 +84,12 @@ export default function AskScreen() {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
-      const questions = getStarterQuestions({ testsCount: count || 0 });
+      const questions = await getStarterQuestions({ testsCount: count || 0 });
       setSuggestedQuestions(questions);
     } catch (error) {
       console.error('Error loading starter questions:', error);
-      setSuggestedQuestions(getStarterQuestions());
+      const fallbackQuestions = await getStarterQuestions();
+      setSuggestedQuestions(fallbackQuestions);
     }
   };
 

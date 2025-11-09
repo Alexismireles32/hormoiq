@@ -1,12 +1,14 @@
 /**
- * OpenAI GPT-4 API Client
- * Handles all AI chat interactions
+ * OpenAI GPT-4 API Client (via Supabase Edge Functions)
+ * Handles all AI chat interactions securely through Edge Functions
  */
 
 import { ChatMessage } from '@/types';
+import { supabase } from '@/lib/supabase';
 
-const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
-const API_URL = 'https://api.openai.com/v1/chat/completions';
+// Edge Functions are now used instead of direct OpenAI API calls
+// This keeps the API key secure on the server side
+const USE_EDGE_FUNCTIONS = true;
 
 export interface ChatCompletionRequest {
   messages: Array<{
@@ -74,46 +76,42 @@ Always reference their specific test results, patterns, ReadyScore, BioAge, and 
 Remember: Your value is in personalized optimization guidance based on their data, not medical advice.`;
 
 /**
- * Send a chat completion request to GPT-4
+ * Send a chat completion request to GPT-4 via Supabase Edge Function
+ * This keeps the OpenAI API key secure on the server side
  */
 export async function sendChatCompletion(
   request: ChatCompletionRequest
 ): Promise<ChatCompletionResponse> {
-  if (!OPENAI_API_KEY) {
-    throw new Error('OpenAI API key not configured');
-  }
-
   try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: request.messages,
-        temperature: 0.7,
-        max_tokens: 500,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'OpenAI API request failed');
+    // Get current session for authentication
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Not authenticated');
     }
 
-    const data = await response.json();
-    
+    // Call Edge Function instead of OpenAI directly
+    const { data, error } = await supabase.functions.invoke('ask-ai', {
+      body: {
+        messages: request.messages,
+        userContext: request.user_context,
+      },
+    });
+
+    if (error) {
+      console.error('Edge Function Error:', error);
+      throw new Error(error.message || 'Failed to get AI response');
+    }
+
+    if (!data || !data.reply) {
+      throw new Error('Invalid response from AI service');
+    }
+
     return {
-      reply: data.choices[0].message.content,
+      reply: data.reply,
       usage: data.usage,
     };
   } catch (error) {
-    console.error('OpenAI API Error:', error);
+    console.error('AI Chat Error:', error);
     throw error;
   }
 }
@@ -256,78 +254,34 @@ export function getMedicalRefusalResponse(): string {
 /**
  * Generate 3 smart suggested questions based on conversation context
  * These are questions the USER would ask (not questions to the user)
- * Uses GPT-4 to create contextually relevant follow-up questions
+ * Uses Supabase Edge Function to securely call GPT-4
  */
 export async function generateSuggestedQuestions(
   conversationContext: string,
   userData: string
 ): Promise<string[]> {
-  if (!OPENAI_API_KEY) {
-    // Fallback to generic questions if API key missing
-    return getGenericSuggestedQuestions();
-  }
-
   try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a suggestion generator for HormoIQ, a hormone optimization app. Your job is to predict what the USER would most likely want to ask NEXT as a follow-up.
-
-CRITICAL: Generate questions that the USER would ASK the AI coach, NOT questions the AI would ask the user.
-
-✅ GOOD EXAMPLES (user asking AI):
-- "What habits help lower cortisol naturally?"
-- "How does sleep affect testosterone levels?"
-- "What supplements support DHEA production?"
-- "When is the best time to test cortisol?"
-- "How can I improve my ReadyScore?"
-
-❌ BAD EXAMPLES (AI asking user - DON'T DO THIS):
-- "What symptoms are you experiencing?"
-- "Have you had a recent blood test?"
-- "Are you taking any medications?"
-
-GUIDELINES:
-1. Base suggestions on the conversation topic they just discussed
-2. Make them actionable and specific to hormone optimization
-3. Consider their personal data (test results, patterns, scores)
-4. Keep questions concise (5-10 words max)
-5. Make them feel like natural follow-up questions
-6. Focus on HOW/WHAT/WHY questions about optimization
-
-Format: Return ONLY 3 questions, one per line, no numbering, no extra text, no punctuation at the end.`,
-          },
-          {
-            role: 'user',
-            content: `User's data:\n${userData}\n\nRecent conversation:\n${conversationContext}\n\nGenerate 3 natural follow-up questions the user would likely ask next:`,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 150,
-      }),
-    });
-
-    if (!response.ok) {
+    // Get current session for authentication
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       return getGenericSuggestedQuestions();
     }
 
-    const data = await response.json();
-    const suggestions = data.choices[0].message.content
-      .trim()
-      .split('\n')
-      .filter((q: string) => q.trim().length > 0)
-      .map((q: string) => q.replace(/^[0-9]+[\.\)]\s*/, '').replace(/\?$/, '').trim()) // Clean up numbering and trailing ?
-      .slice(0, 3);
+    // Call Edge Function
+    const { data, error } = await supabase.functions.invoke('generate-questions', {
+      body: {
+        conversationContext,
+        userData,
+        isStarter: false,
+      },
+    });
 
-    return suggestions.length === 3 ? suggestions : getGenericSuggestedQuestions();
+    if (error || !data || !data.questions) {
+      console.error('Error generating suggestions:', error);
+      return getGenericSuggestedQuestions();
+    }
+
+    return data.questions.length === 3 ? data.questions : getGenericSuggestedQuestions();
   } catch (error) {
     console.error('Error generating suggestions:', error);
     return getGenericSuggestedQuestions();
@@ -337,23 +291,64 @@ Format: Return ONLY 3 questions, one per line, no numbering, no extra text, no p
 /**
  * Get generic starter questions when no conversation history
  * These are questions the user would ask the AI
+ * Now uses Edge Function for better personalization
  */
-export function getStarterQuestions(userData?: any): string[] {
-  // If user has tests, make them specific to their data
-  if (userData?.testsCount && userData.testsCount > 0) {
+export async function getStarterQuestions(userData?: any): Promise<string[]> {
+  try {
+    // Get current session for authentication
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      // Fallback questions if not authenticated
+      return [
+        'How do I get started with testing',
+        'What hormones should I track first',
+        'What lifestyle factors affect hormones most',
+      ];
+    }
+
+    // Call Edge Function for personalized starter questions
+    const { data, error } = await supabase.functions.invoke('generate-questions', {
+      body: {
+        userData,
+        isStarter: true,
+      },
+    });
+
+    if (error || !data || !data.questions) {
+      // Fallback based on user data
+      if (userData?.testsCount && userData.testsCount > 0) {
+        return [
+          'What do my recent test results mean',
+          'How can I improve my hormone balance',
+          'What habits would optimize my scores',
+        ];
+      }
+
+      return [
+        'How do I get started with testing',
+        'What hormones should I track first',
+        'What lifestyle factors affect hormones most',
+      ];
+    }
+
+    return data.questions;
+  } catch (error) {
+    console.error('Error getting starter questions:', error);
+    // Fallback
+    if (userData?.testsCount && userData.testsCount > 0) {
+      return [
+        'What do my recent test results mean',
+        'How can I improve my hormone balance',
+        'What habits would optimize my scores',
+      ];
+    }
+
     return [
-      'What do my recent test results mean',
-      'How can I improve my hormone balance',
-      'What habits would optimize my scores',
+      'How do I get started with testing',
+      'What hormones should I track first',
+      'What lifestyle factors affect hormones most',
     ];
   }
-
-  // New user with no tests
-  return [
-    'How do I get started with testing',
-    'What hormones should I track first',
-    'What lifestyle factors affect hormones most',
-  ];
 }
 
 /**
