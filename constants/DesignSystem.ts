@@ -86,6 +86,18 @@ export const DesignSystem = {
       subtleBackground: '#F5F6F8',
       divider: '#EDEEF1',
     },
+    
+    // Text Colors
+    text: {
+      primary: '#1F2937',      // Dark gray for main text
+      secondary: '#6B7280',    // Medium gray for secondary text
+      tertiary: '#9B9DA2',     // Light gray for tertiary text
+    },
+    
+    // Background & Surface Colors
+    background: '#F9FAFB',     // Off-white main background
+    surface: '#FFFFFF',        // White cards/surfaces
+    errorBackground: '#FDEAEA', // Light red for error states
   },
   
   // ============================================
