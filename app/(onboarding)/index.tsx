@@ -15,6 +15,7 @@ import { showErrorAlert } from '@/lib/errors';
 import { DesignSystem } from '@/constants/DesignSystem';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { generateTestSchedule, saveScheduleToDatabase, getPatternExplanation } from '@/lib/scheduleGenerator';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -24,6 +25,10 @@ export default function OnboardingScreen() {
   const [age, setAge] = useState<number | null>(null);
   const [biologicalSex, setBiologicalSex] = useState<'male' | 'female' | null>(null);
   const [onHormoneTherapy, setOnHormoneTherapy] = useState<'yes' | 'no' | 'not_sure' | null>(null);
+  // Step 4: Test Schedule
+  const [kitReceived, setKitReceived] = useState<boolean | null>(null);
+  const [kitDate, setKitDate] = useState<Date>(new Date());
+  const [schedulePattern, setSchedulePattern] = useState<'A' | 'B' | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleNext = () => {
@@ -39,10 +44,18 @@ export default function OnboardingScreen() {
       Alert.alert('Required', 'Please indicate if you are on hormone therapy');
       return;
     }
+    if (step === 4 && kitReceived === null) {
+      Alert.alert('Required', 'Please indicate if you have received your test kit');
+      return;
+    }
+    if (step === 4 && kitReceived && !schedulePattern) {
+      Alert.alert('Required', 'Please select a testing schedule');
+      return;
+    }
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    if (step < 3) {
+    if (step < 4) {
       setStep(step + 1);
     } else {
       handleComplete();
@@ -99,6 +112,11 @@ export default function OnboardingScreen() {
         on_hormone_therapy: onHormoneTherapy === 'yes',
         hormone_therapy_unknown: onHormoneTherapy === 'not_sure',
         onboarding_completed: true,
+        // Schedule fields
+        kit_received_date: kitReceived ? kitDate.toISOString().split('T')[0] : null,
+        test_schedule_pattern: schedulePattern,
+        test_schedule_start_week: 1,
+        tests_remaining: kitReceived ? 12 : 12, // Always 12, will decrement as they test
       };
 
       let result;
@@ -124,6 +142,25 @@ export default function OnboardingScreen() {
       }
 
       console.log('Onboarding successful!');
+      
+      // Generate test schedule if kit received and pattern selected
+      if (kitReceived && schedulePattern && biologicalSex) {
+        console.log('Generating test schedule...');
+        const schedule = generateTestSchedule(
+          kitDate,
+          schedulePattern,
+          biologicalSex,
+        );
+        
+        const scheduleResult = await saveScheduleToDatabase(user.id, schedule);
+        
+        if (scheduleResult.success) {
+          console.log('Test schedule created successfully!');
+        } else {
+          console.error('Failed to create schedule:', scheduleResult.error);
+          // Don't block onboarding if schedule fails - they can set it later
+        }
+      }
       
       // Force reload to update profile state
       // Use a small delay to ensure database write completes
@@ -272,11 +309,11 @@ export default function OnboardingScreen() {
             colors={DesignSystem.colors.gradients.primary as any}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={[styles.progressFill, { width: `${(step / 3) * 100}%` }]}
+            style={[styles.progressFill, { width: `${(step / 4) * 100}%` }]}
           />
         </View>
         <View style={styles.progressTextContainer}>
-          <Text style={styles.progressText}>Question {step} of 3</Text>
+          <Text style={styles.progressText}>Question {step} of 4</Text>
           {isAnonymous && (
             <TouchableOpacity onPress={handleSkip} disabled={loading}>
               <Text style={styles.skipText}>Skip</Text>
@@ -431,6 +468,154 @@ export default function OnboardingScreen() {
             </View>
           </View>
         )}
+
+        {/* Question 4: Test Schedule */}
+        {step === 4 && (
+          <View style={styles.stepContainer}>
+            <Text style={styles.icon}>🗓️</Text>
+            <Text style={styles.title}>Have you received your test kit?</Text>
+            <Text style={styles.subtitle}>
+              Your kit includes 12 hormone tests to use over 4 weeks (3 tests per week).
+            </Text>
+
+            <View style={styles.optionsContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.therapyButton,
+                  kitReceived === true && styles.therapyButtonActive,
+                ]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setKitReceived(true);
+                }}
+              >
+                {kitReceived === true && (
+                  <LinearGradient
+                    colors={DesignSystem.colors.gradients.primary as any}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                )}
+                <Text style={styles.therapyIcon}>✓</Text>
+                <Text
+                  style={[
+                    styles.therapyText,
+                    kitReceived === true && styles.therapyTextActive,
+                  ]}
+                >
+                  Yes, I have it
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.therapyButton,
+                  kitReceived === false && styles.therapyButtonActive,
+                ]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setKitReceived(false);
+                  setSchedulePattern(null);
+                }}
+              >
+                {kitReceived === false && (
+                  <LinearGradient
+                    colors={DesignSystem.colors.gradients.primary as any}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                )}
+                <Text style={styles.therapyIcon}>📦</Text>
+                <Text
+                  style={[
+                    styles.therapyText,
+                    kitReceived === false && styles.therapyTextActive,
+                  ]}
+                >
+                  Not yet (on the way)
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {kitReceived && (
+              <>
+                <Text style={[styles.title, { marginTop: DesignSystem.spacing[8] }]}>
+                  Choose your testing schedule
+                </Text>
+                <Text style={styles.subtitle}>
+                  We alternate days to cover the entire week, giving the most accurate hormone patterns. Pick your starting days:
+                </Text>
+
+                <View style={styles.scheduleContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.patternCard,
+                      schedulePattern === 'A' && styles.patternCardActive,
+                    ]}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      setSchedulePattern('A');
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.patternHeader}>
+                      <Text style={styles.patternLabel}>Pattern A (Recommended)</Text>
+                      {schedulePattern === 'A' && <Text style={styles.checkmark}>✓</Text>}
+                    </View>
+                    <Text style={styles.patternDays}>Mon · Wed · Fri</Text>
+                    <Text style={styles.patternThen}>then</Text>
+                    <Text style={styles.patternDays}>Tue · Thu · Sat</Text>
+                    <Text style={styles.patternExplanation}>
+                      Start your week strong, covers all 7 days
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.patternCard,
+                      schedulePattern === 'B' && styles.patternCardActive,
+                    ]}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      setSchedulePattern('B');
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.patternHeader}>
+                      <Text style={styles.patternLabel}>Pattern B</Text>
+                      {schedulePattern === 'B' && <Text style={styles.checkmark}>✓</Text>}
+                    </View>
+                    <Text style={styles.patternDays}>Tue · Thu · Sat</Text>
+                    <Text style={styles.patternThen}>then</Text>
+                    <Text style={styles.patternDays}>Mon · Wed · Fri</Text>
+                    <Text style={styles.patternExplanation}>
+                      Alternative schedule, also covers all 7 days
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.scheduleInfo}>
+                  <Text style={styles.scheduleInfoIcon}>💡</Text>
+                  <Text style={styles.scheduleInfoText}>
+                    We'll send reminders for each test. You can always test on different days if needed!
+                  </Text>
+                </View>
+              </>
+            )}
+
+            {kitReceived === false && (
+              <View style={styles.noKitInfo}>
+                <Text style={styles.noKitIcon}>📬</Text>
+                <Text style={styles.noKitTitle}>No problem!</Text>
+                <Text style={styles.noKitText}>
+                  You can set up your testing schedule once your kit arrives. We'll guide you through it.
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
       </ScrollView>
 
       {/* Navigation Buttons */}
@@ -459,7 +644,7 @@ export default function OnboardingScreen() {
               style={styles.nextButtonGradient}
             >
               <Text style={styles.nextButtonText}>
-                {step === 3 ? 'Complete ✓' : 'Next →'}
+                {step === 4 ? 'Complete ✓' : 'Next →'}
               </Text>
             </LinearGradient>
           )}
@@ -668,5 +853,99 @@ const styles = StyleSheet.create({
     fontSize: DesignSystem.typography.fontSize.lg,
     fontWeight: DesignSystem.typography.fontWeight.bold,
     color: DesignSystem.colors.neutral[0],
+  },
+  // Step 4: Schedule styles
+  scheduleContainer: {
+    width: '100%',
+    gap: DesignSystem.spacing[3],
+    marginTop: DesignSystem.spacing[4],
+  },
+  patternCard: {
+    backgroundColor: DesignSystem.colors.neutral[0],
+    borderRadius: DesignSystem.radius.xl,
+    borderWidth: 2,
+    borderColor: DesignSystem.colors.neutral[300],
+    padding: DesignSystem.spacing[5],
+    alignItems: 'center',
+    ...DesignSystem.shadows.sm,
+  },
+  patternCardActive: {
+    borderColor: DesignSystem.colors.primary[500],
+    borderWidth: 3,
+    ...DesignSystem.shadows.md,
+  },
+  patternHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: DesignSystem.spacing[3],
+  },
+  patternLabel: {
+    fontSize: DesignSystem.typography.fontSize.lg,
+    fontWeight: DesignSystem.typography.fontWeight.bold,
+    color: DesignSystem.colors.neutral[900],
+  },
+  checkmark: {
+    fontSize: 24,
+    color: DesignSystem.colors.primary[600],
+  },
+  patternDays: {
+    fontSize: DesignSystem.typography.fontSize['2xl'],
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.primary[600],
+    letterSpacing: 2,
+  },
+  patternThen: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    color: DesignSystem.colors.neutral[500],
+    marginVertical: DesignSystem.spacing[2],
+  },
+  patternExplanation: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    color: DesignSystem.colors.neutral[600],
+    textAlign: 'center',
+    marginTop: DesignSystem.spacing[2],
+  },
+  scheduleInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: DesignSystem.colors.oura.accent,
+    padding: DesignSystem.spacing[4],
+    borderRadius: DesignSystem.radius.lg,
+    marginTop: DesignSystem.spacing[4],
+    gap: DesignSystem.spacing[2],
+  },
+  scheduleInfoIcon: {
+    fontSize: 20,
+  },
+  scheduleInfoText: {
+    flex: 1,
+    fontSize: DesignSystem.typography.fontSize.sm,
+    color: DesignSystem.colors.neutral[700],
+    lineHeight: DesignSystem.typography.fontSize.sm * DesignSystem.typography.lineHeight.relaxed,
+  },
+  noKitInfo: {
+    alignItems: 'center',
+    backgroundColor: DesignSystem.colors.oura.accent,
+    padding: DesignSystem.spacing[8],
+    borderRadius: DesignSystem.radius.xl,
+    marginTop: DesignSystem.spacing[6],
+  },
+  noKitIcon: {
+    fontSize: 64,
+    marginBottom: DesignSystem.spacing[4],
+  },
+  noKitTitle: {
+    fontSize: DesignSystem.typography.fontSize.xl,
+    fontWeight: DesignSystem.typography.fontWeight.bold,
+    color: DesignSystem.colors.neutral[900],
+    marginBottom: DesignSystem.spacing[2],
+  },
+  noKitText: {
+    fontSize: DesignSystem.typography.fontSize.base,
+    color: DesignSystem.colors.neutral[600],
+    textAlign: 'center',
+    lineHeight: DesignSystem.typography.fontSize.base * DesignSystem.typography.lineHeight.relaxed,
   },
 });
