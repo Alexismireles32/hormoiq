@@ -26,11 +26,11 @@ export function AuroraBackground({
   const auroraAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Create the signature 60s aurora animation (like the original)
+    // Create the aurora animation (sped up to 20s so it's more noticeable)
     const animation = Animated.loop(
       Animated.timing(auroraAnim, {
         toValue: 1,
-        duration: 60000, // 60 seconds like the original
+        duration: 20000, // 20 seconds - faster so you can see the movement
         easing: Easing.linear,
         useNativeDriver: true,
       })
@@ -67,11 +67,11 @@ export function AuroraBackground({
           colors={[
             'transparent',
             'transparent',
-            'rgba(96, 165, 250, 0.15)',  // blue-400
-            'rgba(165, 180, 252, 0.12)', // indigo-300
-            'rgba(147, 197, 253, 0.15)', // blue-300
-            'rgba(221, 214, 254, 0.10)', // violet-200
-            'rgba(96, 165, 250, 0.15)',  // blue-400
+            'rgba(96, 165, 250, 0.35)',  // blue-400 - INCREASED from 0.15
+            'rgba(165, 180, 252, 0.30)', // indigo-300 - INCREASED from 0.12
+            'rgba(147, 197, 253, 0.35)', // blue-300 - INCREASED from 0.15
+            'rgba(221, 214, 254, 0.25)', // violet-200 - INCREASED from 0.10
+            'rgba(96, 165, 250, 0.35)',  // blue-400 - INCREASED from 0.15
             'transparent',
             'transparent',
           ]}
@@ -93,9 +93,9 @@ export function AuroraBackground({
         <LinearGradient
           colors={[
             'transparent',
-            'rgba(139, 92, 246, 0.08)', // violet-500
-            'rgba(167, 139, 250, 0.10)', // violet-400
-            'rgba(196, 181, 253, 0.08)', // violet-300
+            'rgba(139, 92, 246, 0.20)', // violet-500 - INCREASED from 0.08
+            'rgba(167, 139, 250, 0.25)', // violet-400 - INCREASED from 0.10
+            'rgba(196, 181, 253, 0.20)', // violet-300 - INCREASED from 0.08
             'transparent',
           ]}
           start={{ x: 0, y: 0 }}
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     bottom: -10,
     width: SCREEN_WIDTH * 4, // 300% size for movement
     height: SCREEN_HEIGHT + 20,
-    opacity: 0.5, // Match original opacity
+    opacity: 0.8, // INCREASED from 0.5 to make it more visible
   },
   auroraLayerSecondary: {
     position: 'absolute',
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     bottom: -10,
     width: SCREEN_WIDTH * 4,
     height: SCREEN_HEIGHT + 20,
-    opacity: 0.3,
+    opacity: 0.6, // INCREASED from 0.3 to make it more visible
   },
   gradient: {
     flex: 1,
