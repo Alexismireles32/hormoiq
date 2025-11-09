@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { EliBackground } from '@/components/EliBackground';
+import { EliAnimatedBackground } from '@/components/EliAnimatedBackground';
 import { EliCircularProgress } from '@/components/EliCircularProgress';
 import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
@@ -133,16 +133,16 @@ export default function HomeDashboardEli() {
 
   if (loading) {
     return (
-      <EliBackground type="multi">
+      <EliAnimatedBackground type="multi">
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
-      </EliBackground>
+      </EliAnimatedBackground>
     );
   }
 
   return (
-    <EliBackground type="multi">
+    <EliAnimatedBackground type="multi">
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -257,7 +257,7 @@ export default function HomeDashboardEli() {
           <Text style={styles.navLabel}>Plans</Text>
         </TouchableOpacity>
       </View>
-    </EliBackground>
+    </EliAnimatedBackground>
   );
 }
 
