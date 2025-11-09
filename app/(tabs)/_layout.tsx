@@ -19,9 +19,9 @@ export default function TabLayout() {
         tabBarInactiveTintColor: DesignSystem.colors.neutral[400],
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: DesignSystem.colors.oura.cardBackground,
+          backgroundColor: DesignSystem.colors.surface,
           borderTopWidth: 1,
-          borderTopColor: DesignSystem.colors.oura.cardBorder,
+          borderTopColor: DesignSystem.colors.neutral[200],
           height: 80,
           paddingBottom: 24,
           paddingTop: 8,

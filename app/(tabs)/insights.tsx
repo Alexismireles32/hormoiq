@@ -15,7 +15,7 @@ import { FlippableReadyCard } from '@/components/FlippableReadyCard';
 import { FlippableBioAgeCard } from '@/components/FlippableBioAgeCard';
 import { FlippableImpactCard } from '@/components/FlippableImpactCard';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
-import { GradientBackground } from '@/components/GradientBackground';
+import { EliAnimatedBackground } from '@/components/EliAnimatedBackground';
 import { CelebrationEffect } from '@/components/CelebrationEffect';
 import { SkeletonScoreCard } from '@/components/SkeletonLoader';
 import { EmptyStateIllustration } from '@/components/EmptyStateIllustration';
@@ -182,14 +182,11 @@ export default function InsightsScreen() {
 
   if (tests.length === 0) {
     return (
-      <View style={styles.container}>
-        <GradientBackground
-          colors={DesignSystem.colors.gradients.lavender}
-          style={styles.headerGradient}
-        >
-          <Text style={styles.headerTitleWhite}>Insights</Text>
+      <EliAnimatedBackground type="purple" scrollEnabled={false}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Insights</Text>
           <Text style={styles.headerSubtitle}>Your wellness dashboard</Text>
-        </GradientBackground>
+        </View>
         <View style={styles.emptyContainer}>
           <EmptyStateIllustration
             type="no_insights"
@@ -201,7 +198,7 @@ export default function InsightsScreen() {
             onSecondaryActionPress={() => router.push('/help')}
           />
         </View>
-      </View>
+      </EliAnimatedBackground>
     );
   }
 
@@ -323,16 +320,11 @@ export default function InsightsScreen() {
   ];
 
   return (
-    <View style={styles.container}>
-      {/* Animated Header */}
-      <GradientBackground
-        colors={DesignSystem.colors.gradients.lavender}
-        animated={true}
-        style={styles.headerGradient}
-      >
-        <Text style={styles.headerTitleWhite}>Insights</Text>
+    <EliAnimatedBackground type="purple">
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Insights</Text>
         <Text style={styles.headerSubtitle}>Your wellness dashboard</Text>
-      </GradientBackground>
+      </View>
 
       {/* Grid Dashboard */}
       <InsightsDashboardGrid
@@ -361,7 +353,7 @@ export default function InsightsScreen() {
           onComplete={() => setShowCelebration(false)}
         />
       )}
-    </View>
+    </EliAnimatedBackground>
   );
 }
 
