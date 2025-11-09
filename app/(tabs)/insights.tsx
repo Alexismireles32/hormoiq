@@ -217,7 +217,7 @@ export default function InsightsScreen() {
           icon="🧪"
           trend={stats.testsThisWeek >= 3 ? 'up' : 'neutral'}
           trendValue={`${stats.testsThisWeek} this week`}
-          gradient={DesignSystem.colors.gradients.ocean}
+          gradient={DesignSystem.colors.gradients.blueBlur}
         />
       ),
       span: 1 as const,
@@ -231,7 +231,7 @@ export default function InsightsScreen() {
           label="Day Streak"
           icon="🔥"
           trend={stats.streak >= 7 ? 'up' : stats.streak > 0 ? 'neutral' : 'down'}
-          gradient={DesignSystem.colors.gradients.sunset}
+          gradient={DesignSystem.colors.gradients.yellowBlur}
         />
       ),
       span: 1 as const,
@@ -265,7 +265,7 @@ export default function InsightsScreen() {
           label="Completion Rate"
           icon="🎯"
           trend={stats.completionRate >= 75 ? 'up' : 'neutral'}
-          gradient={DesignSystem.colors.gradients.emerald}
+          gradient={DesignSystem.colors.gradients.greenBlur}
         />
       ),
       span: 1 as const,
@@ -278,7 +278,7 @@ export default function InsightsScreen() {
           value={stats.uniqueHormones}
           label="Hormones Tracked"
           icon="💧"
-          gradient={DesignSystem.colors.gradients.primary}
+          gradient={DesignSystem.colors.gradients.blueBlur}
         />
       ),
       span: 1 as const,
@@ -298,7 +298,7 @@ export default function InsightsScreen() {
           value={stats.activeProtocols}
           label="Active Protocols"
           icon="📋"
-          gradient={DesignSystem.colors.gradients.rose}
+          gradient={DesignSystem.colors.gradients.pinkBlur}
           onPress={() => router.push('/(tabs)/protocols')}
         />
       ),
@@ -312,7 +312,7 @@ export default function InsightsScreen() {
           value={stats.daysActive}
           label="Days Active"
           icon="📅"
-          gradient={DesignSystem.colors.gradients.sky}
+          gradient={DesignSystem.colors.gradients.purpleBlur}
         />
       ),
       span: 1 as const,
