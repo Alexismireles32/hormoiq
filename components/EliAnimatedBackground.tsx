@@ -1,279 +1,333 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, Dimensions, Animated, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { DesignSystem } from '@/constants/DesignSystem';
 
 type BackgroundType = 'yellow' | 'purple' | 'blue' | 'green' | 'pink' | 'multi';
 
-interface BlurCircle {
+interface FloatingCircle {
   id: number;
-  color: string;
+  x: number;
+  y: number;
   size: number;
-  initialX: number;
-  initialY: number;
-  duration: number;
-  delay: number;
+  color: string;
   translateX: Animated.Value;
   translateY: Animated.Value;
   scale: Animated.Value;
+  parallaxOffset: Animated.Value;
 }
 
 interface EliAnimatedBackgroundProps {
   type?: BackgroundType;
   children: React.ReactNode;
   style?: any;
+  onScroll?: (event: any) => void;
+  scrollEnabled?: boolean;
 }
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 /**
- * Eli Health-style animated gradient background
+ * Eli Health-style animated gradient background with parallax scroll
  * Features:
- * - 6 floating blur circles with independent animations
- * - Smooth, organic movement patterns
- * - Pastel color palette
- * - Continuous animation loops
- * - Optimized for 60fps performance
+ * - Soft pastel gradients
+ * - Floating blur circles that animate
+ * - Parallax effect on scroll
+ * - Smooth continuous animations
+ * - Depth layers for visual richness
  */
 export function EliAnimatedBackground({
   type = 'multi',
   children,
   style,
+  onScroll,
+  scrollEnabled = true,
 }: EliAnimatedBackgroundProps) {
-  const circlesRef = useRef<BlurCircle[]>([]);
-
-  // Initialize circles with animation values
-  useEffect(() => {
-    circlesRef.current = [
-      {
-        id: 1,
-        color: 'rgba(255, 223, 186, 0.4)', // Soft peach
-        size: 400,
-        initialX: 10,
-        initialY: 20,
-        duration: 25000,
-        delay: 0,
-        translateX: new Animated.Value(0),
-        translateY: new Animated.Value(0),
-        scale: new Animated.Value(1),
-      },
-      {
-        id: 2,
-        color: 'rgba(200, 162, 255, 0.35)', // Soft purple
-        size: 450,
-        initialX: 70,
-        initialY: 10,
-        duration: 28000,
-        delay: 2000,
-        translateX: new Animated.Value(0),
-        translateY: new Animated.Value(0),
-        scale: new Animated.Value(1),
-      },
-      {
-        id: 3,
-        color: 'rgba(147, 197, 253, 0.3)', // Soft blue
-        size: 380,
-        initialX: 20,
-        initialY: 70,
-        duration: 30000,
-        delay: 4000,
-        translateX: new Animated.Value(0),
-        translateY: new Animated.Value(0),
-        scale: new Animated.Value(1),
-      },
-      {
-        id: 4,
-        color: 'rgba(134, 239, 172, 0.35)', // Soft green
-        size: 420,
-        initialX: 80,
-        initialY: 60,
-        duration: 26000,
-        delay: 1000,
-        translateX: new Animated.Value(0),
-        translateY: new Animated.Value(0),
-        scale: new Animated.Value(1),
-      },
-      {
-        id: 5,
-        color: 'rgba(251, 207, 232, 0.3)', // Soft pink
-        size: 360,
-        initialX: 50,
-        initialY: 40,
-        duration: 32000,
-        delay: 3000,
-        translateX: new Animated.Value(0),
-        translateY: new Animated.Value(0),
-        scale: new Animated.Value(1),
-      },
-      {
-        id: 6,
-        color: 'rgba(254, 240, 138, 0.25)', // Soft yellow
-        size: 340,
-        initialX: 40,
-        initialY: 80,
-        duration: 27000,
-        delay: 5000,
-        translateX: new Animated.Value(0),
-        translateY: new Animated.Value(0),
-        scale: new Animated.Value(1),
-      },
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(0)).current;
+  const [circles] = useState<FloatingCircle[]>(() => {
+    const colors = [
+      'rgba(255, 245, 157, 0.3)', // Soft yellow
+      'rgba(206, 147, 216, 0.3)', // Soft purple
+      'rgba(144, 202, 249, 0.3)', // Soft blue
+      'rgba(165, 214, 167, 0.3)', // Soft green
+      'rgba(248, 187, 208, 0.3)', // Soft pink
     ];
 
-    // Start animations for each circle
-    circlesRef.current.forEach((circle) => {
-      startCircleAnimation(circle);
-    });
+    return Array.from({ length: 8 }, (_, i) => ({
+      id: i,
+      x: Math.random() * (SCREEN_WIDTH - 200),
+      y: Math.random() * (SCREEN_HEIGHT - 200),
+      size: Math.random() * 300 + 200,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      translateX: new Animated.Value(0),
+      translateY: new Animated.Value(0),
+      scale: new Animated.Value(1),
+      parallaxOffset: new Animated.Value(0),
+    }));
+  });
 
-    // Cleanup
-    return () => {
-      circlesRef.current.forEach((circle) => {
-        circle.translateX.stopAnimation();
-        circle.translateY.stopAnimation();
-        circle.scale.stopAnimation();
-      });
-    };
-  }, []);
-
-  const generateOrganicPath = (radius: number) => {
-    // Generate organic, smooth movement path
-    const numPoints = 8;
-    const points = [];
-
-    for (let i = 0; i < numPoints; i++) {
-      const angle = (i / numPoints) * Math.PI * 2;
-      const r = radius + (Math.random() - 0.5) * radius * 0.3;
-      points.push({
-        x: Math.cos(angle) * r,
-        y: Math.sin(angle) * r,
-      });
-    }
-
-    return points;
-  };
-
-  const startCircleAnimation = (circle: BlurCircle) => {
-    const movementRadius = 80; // pixels to move
-    const path = generateOrganicPath(movementRadius);
-
-    // Create looping animation sequence
-    const createPathAnimation = (axis: 'x' | 'y', animValue: Animated.Value) => {
-      const values = path.map((p) => (axis === 'x' ? p.x : p.y));
-      values.push(values[0]); // Close the loop
-
-      return Animated.loop(
-        Animated.sequence(
-          values.map((value, index) =>
-            Animated.timing(animValue, {
-              toValue: value,
-              duration: circle.duration / values.length,
-              easing: Easing.inOut(Easing.ease),
-              useNativeDriver: true,
-              delay: index === 0 ? circle.delay : 0,
-            })
-          )
-        )
-      );
-    };
-
-    // Create scale pulsing animation
-    const scaleAnimation = Animated.loop(
+  useEffect(() => {
+    // Pulse animation for gradient overlay
+    Animated.loop(
       Animated.sequence([
-        Animated.timing(circle.scale, {
-          toValue: 1.1,
-          duration: circle.duration / 4,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(circle.scale, {
-          toValue: 0.95,
-          duration: circle.duration / 4,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(circle.scale, {
-          toValue: 1.05,
-          duration: circle.duration / 4,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(circle.scale, {
+        Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: circle.duration / 4,
-          easing: Easing.inOut(Easing.ease),
+          duration: 8000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0,
+          duration: 8000,
           useNativeDriver: true,
         }),
       ])
-    );
+    ).start();
 
-    // Start all animations in parallel
-    Animated.parallel([
-      createPathAnimation('x', circle.translateX),
-      createPathAnimation('y', circle.translateY),
-      scaleAnimation,
-    ]).start();
-  };
+    // Animate each floating circle
+    circles.forEach((circle, index) => {
+      const duration = 15000 + Math.random() * 10000;
+      const delay = index * 1000;
+
+      // X movement
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(circle.translateX, {
+            toValue: 30,
+            duration: duration / 3,
+            delay,
+            useNativeDriver: true,
+          }),
+          Animated.timing(circle.translateX, {
+            toValue: -30,
+            duration: (duration / 3) * 2,
+            useNativeDriver: true,
+          }),
+          Animated.timing(circle.translateX, {
+            toValue: 0,
+            duration: duration / 3,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+
+      // Y movement
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(circle.translateY, {
+            toValue: -40,
+            duration: duration / 2,
+            delay: delay + 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(circle.translateY, {
+            toValue: 40,
+            duration: duration,
+            useNativeDriver: true,
+          }),
+          Animated.timing(circle.translateY, {
+            toValue: 0,
+            duration: duration / 2,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+
+      // Scale animation
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(circle.scale, {
+            toValue: 1.1,
+            duration: duration / 4,
+            delay: delay + 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(circle.scale, {
+            toValue: 0.9,
+            duration: duration / 2,
+            useNativeDriver: true,
+          }),
+          Animated.timing(circle.scale, {
+            toValue: 1,
+            duration: duration / 4,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    });
+  }, []);
 
   const getGradientColors = () => {
     switch (type) {
       case 'yellow':
-        return ['#FFFBEB', '#FEF3C7', '#FDE68A'];
+        return ['#fef9e7', '#fff9e6', '#fffbeb'];
       case 'purple':
-        return ['#FAF5FF', '#F3E8FF', '#E9D5FF'];
+        return ['#fef5ff', '#f8f3ff', '#faf5ff'];
       case 'blue':
-        return ['#EFF6FF', '#DBEAFE', '#BFDBFE'];
+        return ['#eff6ff', '#f0f8ff', '#eff6ff'];
       case 'green':
-        return ['#F0FDF4', '#DCFCE7', '#BBF7D0'];
+        return ['#f0fdf4', '#f0fdf4', '#f0fdf4'];
       case 'pink':
-        return ['#FFF1F2', '#FFE4E6', '#FECDD3'];
+        return ['#fff1f2', '#fef9e7', '#fff1f2'];
       case 'multi':
+        return ['#fef9e7', '#f8f3ff', '#f0f8ff'];
       default:
-        return ['#FAF5FF', '#FFF1F2', '#EFF6FF']; // Multi-color base
+        return ['#f0f8ff', '#fef9e7', '#f8f3ff'];
     }
   };
 
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    {
+      useNativeDriver: false,
+      listener: onScroll,
+    }
+  );
+
   return (
     <View style={[styles.container, style]}>
-      {/* Base gradient background */}
+      {/* Base gradient */}
       <LinearGradient
         colors={getGradientColors()}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
+      />
+
+      {/* Pulsing overlay gradient */}
+      <Animated.View
+        style={[
+          styles.overlayGradient,
+          {
+            opacity: pulseAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.3, 0.6],
+            }),
+          },
+        ]}
       >
-        {/* Animated blur circles */}
-        <View style={styles.blurContainer}>
-          {circlesRef.current.map((circle) => (
+        <LinearGradient
+          colors={['rgba(255, 249, 230, 0.5)', 'rgba(254, 245, 255, 0.5)', 'rgba(240, 248, 255, 0.5)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradient}
+        />
+      </Animated.View>
+
+      {/* Floating blur circles */}
+      <View style={styles.circlesContainer} pointerEvents="none">
+        {circles.map((circle) => {
+          // Parallax effect based on scroll
+          const parallaxY = scrollY.interpolate({
+            inputRange: [0, 1000],
+            outputRange: [0, -circle.size * 0.3],
+            extrapolate: 'clamp',
+          });
+
+          return (
             <Animated.View
               key={circle.id}
               style={[
                 styles.blurCircle,
                 {
+                  left: circle.x,
+                  top: circle.y,
                   width: circle.size,
                   height: circle.size,
                   backgroundColor: circle.color,
-                  left: `${circle.initialX}%`,
-                  top: `${circle.initialY}%`,
                   transform: [
                     { translateX: circle.translateX },
-                    { translateY: circle.translateY },
+                    { translateY: Animated.add(circle.translateY, parallaxY) },
                     { scale: circle.scale },
                   ],
                 },
               ]}
             />
-          ))}
+          );
+        })}
+      </View>
+
+      {/* Additional depth layer */}
+      <View style={styles.depthLayer} pointerEvents="none">
+        {Array.from({ length: 5 }).map((_, i) => {
+          const depthY = scrollY.interpolate({
+            inputRange: [0, 1000],
+            outputRange: [0, -i * 20],
+            extrapolate: 'clamp',
+          });
+
+          return (
+            <Animated.View
+              key={`depth-${i}`}
+              style={[
+                styles.depthCircle,
+                {
+                  left: Math.random() * (SCREEN_WIDTH - 150),
+                  top: Math.random() * (SCREEN_HEIGHT - 150),
+                  width: Math.random() * 150 + 100,
+                  height: Math.random() * 150 + 100,
+                  backgroundColor: [
+                    'rgba(255, 235, 59, 0.2)',
+                    'rgba(186, 104, 200, 0.2)',
+                    'rgba(100, 181, 246, 0.2)',
+                    'rgba(129, 199, 132, 0.2)',
+                    'rgba(240, 98, 146, 0.2)',
+                  ][i % 5],
+                  transform: [{ translateY: depthY }],
+                },
+              ]}
+            />
+          );
+        })}
+      </View>
+
+      {/* Subtle gradient mesh overlay */}
+      <View style={styles.meshOverlay} pointerEvents="none">
+        <View style={[styles.meshGradient, { top: '20%', left: '10%' }]}>
+          <LinearGradient
+            colors={['rgba(255, 245, 157, 0.4)', 'transparent']}
+            style={styles.meshCircle}
+          />
         </View>
+        <View style={[styles.meshGradient, { top: '10%', right: '5%' }]}>
+          <LinearGradient
+            colors={['rgba(206, 147, 216, 0.4)', 'transparent']}
+            style={styles.meshCircle}
+          />
+        </View>
+        <View style={[styles.meshGradient, { top: '60%', left: '30%' }]}>
+          <LinearGradient
+            colors={['rgba(144, 202, 249, 0.4)', 'transparent']}
+            style={styles.meshCircle}
+          />
+        </View>
+        <View style={[styles.meshGradient, { bottom: '10%', right: '10%' }]}>
+          <LinearGradient
+            colors={['rgba(165, 214, 167, 0.4)', 'transparent']}
+            style={styles.meshCircle}
+          />
+        </View>
+        <View style={[styles.meshGradient, { bottom: '5%', left: '5%' }]}>
+          <LinearGradient
+            colors={['rgba(248, 187, 208, 0.4)', 'transparent']}
+            style={styles.meshCircle}
+          />
+        </View>
+      </View>
 
-        {/* Subtle overlay for depth */}
-        <LinearGradient
-          colors={['transparent', 'rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.1)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.overlay}
-        />
-
-        {/* Content layer */}
+      {/* Content with scroll */}
+      {scrollEnabled ? (
+        <Animated.ScrollView
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+        >
+          {children}
+        </Animated.ScrollView>
+      ) : (
         <View style={styles.content}>{children}</View>
-      </LinearGradient>
+      )}
     </View>
   );
 }
@@ -281,29 +335,73 @@ export function EliAnimatedBackground({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradient: {
-    flex: 1,
     position: 'relative',
   },
-  blurContainer: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
+  gradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  overlayGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  circlesContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   blurCircle: {
     position: 'absolute',
     borderRadius: 9999,
-    // Note: React Native doesn't support CSS blur filter
-    // The blur effect is simulated through opacity and multiple overlapping circles
+    // Note: React Native doesn't support blur filter directly
+    // We simulate it with opacity and shadows
     opacity: 0.6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 80,
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 1,
+  depthLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.4,
+  },
+  depthCircle: {
+    position: 'absolute',
+    borderRadius: 9999,
+    opacity: 0.5,
+  },
+  meshOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.3,
+  },
+  meshGradient: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+  },
+  meshCircle: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 150,
   },
   content: {
     flex: 1,
-    position: 'relative',
     zIndex: 10,
   },
 });

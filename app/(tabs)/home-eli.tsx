@@ -133,7 +133,7 @@ export default function HomeDashboardEli() {
 
   if (loading) {
     return (
-      <EliAnimatedBackground type="multi">
+      <EliAnimatedBackground type="multi" scrollEnabled={false}>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
@@ -143,11 +143,7 @@ export default function HomeDashboardEli() {
 
   return (
     <EliAnimatedBackground type="multi">
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
+      <View style={styles.scrollContent}>
         {/* Header with profile */}
         <View style={styles.header}>
           <View>
@@ -233,7 +229,7 @@ export default function HomeDashboardEli() {
         </View>
 
         <View style={{ height: 100 }} />
-      </ScrollView>
+      </View>
 
       {/* Bottom Navigation with large center button */}
       <View style={styles.bottomNav}>
@@ -262,7 +258,7 @@ export default function HomeDashboardEli() {
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  scrollContent: {
     flex: 1,
   },
   loadingContainer: {
