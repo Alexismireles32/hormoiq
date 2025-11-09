@@ -373,7 +373,7 @@ export default function AskScreen() {
 
   if (loadingData) {
     return (
-      <AuroraBackground intensity="low" speed="slow">
+      <AuroraBackground showRadialGradient={true}>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={DesignSystem.colors.primary[500]} />
           <Text style={styles.loadingText}>Loading your coach...</Text>
@@ -383,7 +383,7 @@ export default function AskScreen() {
   }
 
   return (
-    <AuroraBackground intensity="low" speed="slow">
+    <AuroraBackground showRadialGradient={true}>
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
