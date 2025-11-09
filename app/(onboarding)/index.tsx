@@ -58,12 +58,17 @@ export default function OnboardingScreen() {
     setLoading(true);
 
     try {
-      // First, try to check if user exists
-      const { data: existingUser } = await supabase
+      // First, check if user exists (maybeSingle doesn't throw error if not found)
+      const { data: existingUser, error: checkError } = await supabase
         .from('users')
         .select('id')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
+
+      // Ignore PGRST116 (no rows found) - it's expected for new users
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking user:', checkError);
+      }
 
       const userData = {
         id: user.id,
@@ -78,12 +83,14 @@ export default function OnboardingScreen() {
       let result;
       if (existingUser) {
         // Update existing user
+        console.log('Updating existing user...');
         result = await supabase
           .from('users')
           .update(userData)
           .eq('id', user.id);
       } else {
         // Insert new user
+        console.log('Inserting new user...');
         result = await supabase
           .from('users')
           .insert(userData);
@@ -127,12 +134,17 @@ export default function OnboardingScreen() {
           onPress: async () => {
             setLoading(true);
             try {
-              // Check if user exists
-              const { data: existingUser } = await supabase
+              // Check if user exists (maybeSingle doesn't throw)
+              const { data: existingUser, error: checkError } = await supabase
                 .from('users')
                 .select('id')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle();
+
+              // Ignore PGRST116 (no rows found)
+              if (checkError && checkError.code !== 'PGRST116') {
+                console.error('Error checking user:', checkError);
+              }
 
               const userData = {
                 id: user.id,
@@ -147,12 +159,14 @@ export default function OnboardingScreen() {
               let result;
               if (existingUser) {
                 // Update existing user
+                console.log('Updating existing user (skip)...');
                 result = await supabase
                   .from('users')
                   .update(userData)
                   .eq('id', user.id);
               } else {
                 // Insert new user
+                console.log('Inserting new user (skip)...');
                 result = await supabase
                   .from('users')
                   .insert(userData);
