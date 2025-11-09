@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { AuroraBackground } from '@/components/AuroraBackground';
 
 export default function SignUp() {
   const [code, setCode] = useState('');
@@ -70,11 +69,10 @@ export default function SignUp() {
   };
 
   return (
-    <AuroraBackground showRadialGradient={true}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-      >
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
       <View style={styles.content}>
         <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>Choose your 3-digit code</Text>
@@ -115,14 +113,13 @@ export default function SignUp() {
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
-    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor removed for Aurora
+    backgroundColor: '#fff',
   },
   content: {
     flex: 1,

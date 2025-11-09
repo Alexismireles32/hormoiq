@@ -9,7 +9,6 @@ import {
 import { router } from 'expo-router';
 import { DesignSystem } from '@/constants/DesignSystem';
 import * as Haptics from 'expo-haptics';
-import { AuroraBackground } from '@/components/AuroraBackground';
 
 const HORMONES = [
   {
@@ -53,8 +52,7 @@ export default function TestSelectionScreen() {
   };
 
   return (
-    <AuroraBackground showRadialGradient={true}>
-      <View style={styles.container}>
+    <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
@@ -118,14 +116,13 @@ export default function TestSelectionScreen() {
         </View>
       </ScrollView>
     </View>
-    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor removed for Aurora
+    backgroundColor: DesignSystem.colors.oura.background,
   },
   scrollView: {
     flex: 1,

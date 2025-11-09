@@ -1,32 +1,38 @@
-import { AnimatedCard } from '@/components/AnimatedCard';
-import { AnimatedTouchable } from '@/components/AnimatedTouchable';
-import { AuroraBackground } from '@/components/AuroraBackground';
-import { BioAgeCard } from '@/components/BioAgeCard';
-import { FeatureExplainer, FeatureType } from '@/components/FeatureExplainer';
-import { FirstTestTutorial } from '@/components/FirstTestTutorial';
-import { defaultTourSteps, GuidedTour } from '@/components/GuidedTour';
-import { ProgressTracker } from '@/components/ProgressTracker';
-import { ReadyCard } from '@/components/ReadyCard';
-import { SkeletonCard, SkeletonLoader, SkeletonScoreCard } from '@/components/SkeletonLoader';
-import { SwipeableScoreCards } from '@/components/SwipeableScoreCards';
-import { TestScheduleCard } from '@/components/TestScheduleCard';
-import { Text, View } from '@/components/Themed';
-import { DesignSystem } from '@/constants/DesignSystem';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
-import { HormoneTest } from '@/types';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Dimensions,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
   RefreshControl,
   View as RNView,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity
+  ActivityIndicator,
+  Dimensions,
 } from 'react-native';
+import { Text, View } from '@/components/Themed';
+import { router } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
+import { ReadyCard } from '@/components/ReadyCard';
+import { BioAgeCard } from '@/components/BioAgeCard';
+import { SwipeableScoreCards } from '@/components/SwipeableScoreCards';
+import { TestScheduleCard } from '@/components/TestScheduleCard';
+import { FeatureExplainer, FeatureType } from '@/components/FeatureExplainer';
+import { SkeletonLoader, SkeletonCard, SkeletonScoreCard } from '@/components/SkeletonLoader';
+import { EmptyStateIllustration } from '@/components/EmptyStateIllustration';
+import { ProgressTracker } from '@/components/ProgressTracker';
+import { GuidedTour, defaultTourSteps } from '@/components/GuidedTour';
+import { FirstTestTutorial } from '@/components/FirstTestTutorial';
+import { AnimatedTouchable } from '@/components/AnimatedTouchable';
+import { AnimatedCard } from '@/components/AnimatedCard';
+import { supabase } from '@/lib/supabase';
+import { HormoneTest } from '@/types';
+import * as Haptics from 'expo-haptics';
+import { DesignSystem } from '@/constants/DesignSystem';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import HeroCard from '@/components/HeroCard';
+import { generateHeroInsight, HeroInsight } from '@/utils/heroInsights';
+import { generateProactiveMessage } from '@/utils/proactiveAI';
+import { calculateStreak } from '@/utils/streakCalculator';
+import { getReadyScoreContext } from '@/utils/readyScoreContext';
 
 const { width } = Dimensions.get('window');
 
@@ -85,6 +91,16 @@ export default function DashboardScreen() {
   const [currentFeature, setCurrentFeature] = useState<FeatureType>('test');
   const [showTour, setShowTour] = useState(false);
   const [showTestTutorial, setShowTestTutorial] = useState(false);
+  
+  // NEW: Hero Card & Enhancements
+  const [heroInsight, setHeroInsight] = useState<HeroInsight>({
+    insight: "",
+    recommendations: [],
+    primaryAction: { label: "", route: "" }
+  });
+  const [aiProactiveMessage, setAiProactiveMessage] = useState<string | null>(null);
+  const [streak, setStreak] = useState(0);
+  const [readyScore, setReadyScore] = useState<number | null>(null);
 
   useEffect(() => {
     loadData();
@@ -142,7 +158,8 @@ export default function DashboardScreen() {
         .eq('user_id', user.id)
         .order('timestamp', { ascending: false });
       if (testsError) throw testsError;
-      setTests((testsData as HormoneTest[]) || []);
+      const loadedTests = (testsData as HormoneTest[]) || [];
+      setTests(loadedTests);
 
       // Load user profile
       const { data: userData, error: userError } = await supabase
@@ -154,6 +171,35 @@ export default function DashboardScreen() {
       if (userData) {
         setUserGender(userData.gender || 'male');
         setUserAge(userData.age || 30);
+      }
+
+      // Load ReadyScore for hero insights
+      const { data: readyScoreData } = await supabase
+        .from('ready_scores')
+        .select('score')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+        .limit(1)
+        .single();
+      
+      const currentReadyScore = readyScoreData?.score || null;
+      setReadyScore(currentReadyScore);
+
+      // Generate Hero Insight
+      const lastTestDate = loadedTests[0]?.timestamp || loadedTests[0]?.created_at;
+      const insight = generateHeroInsight(loadedTests, currentReadyScore || undefined, lastTestDate);
+      setHeroInsight(insight);
+
+      // Generate Proactive AI Message
+      if (loadedTests.length > 0) {
+        const aiMessage = await generateProactiveMessage(loadedTests);
+        setAiProactiveMessage(aiMessage);
+      }
+
+      // Calculate Streak
+      if (loadedTests.length > 0) {
+        const currentStreak = calculateStreak(loadedTests);
+        setStreak(currentStreak);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -250,8 +296,7 @@ export default function DashboardScreen() {
   const hasNoTests = tests.length === 0;
 
   return (
-    <AuroraBackground showRadialGradient={true}>
-      <View style={styles.container}>
+    <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
@@ -262,9 +307,16 @@ export default function DashboardScreen() {
       >
         {/* Header */}
         <RNView style={styles.header}>
-          <RNView>
+          <RNView style={{ flex: 1 }}>
             <Text style={styles.greeting}>{getGreeting()}</Text>
-            <Text style={styles.appName}>HormoIQ</Text>
+            <RNView style={styles.userRow}>
+              <Text style={styles.appName}>HormoIQ</Text>
+              {streak > 0 && (
+                <RNView style={styles.streakBadge}>
+                  <Text style={styles.streakText}>🔥 {streak}-day streak</Text>
+                </RNView>
+              )}
+            </RNView>
           </RNView>
           <TouchableOpacity
             style={styles.profileButton}
@@ -274,22 +326,14 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </RNView>
 
-        {/* Welcome Banner for New Users */}
-        {hasNoTests && (
-          <AnimatedCard delay={0} style={styles.welcomeBanner}>
-            <Text style={styles.welcomeIcon}>👋</Text>
-            <Text style={styles.welcomeTitle}>Welcome to HormoIQ!</Text>
-            <Text style={styles.welcomeText}>
-              Your test strips are on the way. While you wait, explore the features below. 
-              Everything is ready for you—just log your first test when your strips arrive!
-            </Text>
-            <TouchableOpacity
-              style={styles.welcomeButton}
-              onPress={() => router.push('/test')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.welcomeButtonText}>Preview Test Input</Text>
-            </TouchableOpacity>
+        {/* Hero Card - Today's Focus (100/100 UX Enhancement) */}
+        {heroInsight.insight && (
+          <AnimatedCard delay={0}>
+            <HeroCard
+              insight={heroInsight.insight}
+              recommendations={heroInsight.recommendations}
+              primaryAction={heroInsight.primaryAction}
+            />
           </AnimatedCard>
         )}
 
@@ -445,6 +489,15 @@ export default function DashboardScreen() {
                   </RNView>
                   <Text style={styles.featureCardName}>{feature.name}</Text>
                   <Text style={styles.featureCardDescription}>{feature.description}</Text>
+                  
+                  {/* Proactive AI Message for ASK™ */}
+                  {feature.id === 'ask' && aiProactiveMessage && (
+                    <RNView style={styles.aiMessageContainer}>
+                      <Text style={styles.aiMessageLabel}>💭 AI Insight:</Text>
+                      <Text style={styles.aiMessage}>"{aiProactiveMessage}"</Text>
+                      <Text style={styles.aiCTA}>💬 Let's Discuss →</Text>
+                    </RNView>
+                  )}
                 </AnimatedTouchable>
               </AnimatedCard>
             ))}
@@ -523,14 +576,13 @@ export default function DashboardScreen() {
         onStartTest={handleStartFirstTest}
       />
     </View>
-    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor removed for Aurora background
+    backgroundColor: DesignSystem.colors.neutral[50],  // Off-white cream
   },
   centered: {
     justifyContent: 'center',
@@ -898,5 +950,50 @@ const styles = StyleSheet.create({
     fontSize: DesignSystem.typography.fontSize.xs,
     fontWeight: DesignSystem.typography.fontWeight.medium,
     color: DesignSystem.colors.primary[600],
+  },
+  // 100/100 UX Enhancement Styles
+  userRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: DesignSystem.spacing[3],
+  },
+  streakBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+  },
+  streakText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#D97706',
+  },
+  aiMessageContainer: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: DesignSystem.colors.primary[500],
+  },
+  aiMessageLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: DesignSystem.colors.primary[500],
+    marginBottom: 6,
+  },
+  aiMessage: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: '#374151',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  aiCTA: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: DesignSystem.colors.primary[500],
   },
 });

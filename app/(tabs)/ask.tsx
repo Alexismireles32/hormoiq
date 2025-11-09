@@ -24,7 +24,6 @@ import { DesignSystem } from '@/constants/DesignSystem';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { sanitizeAIResponse, sanitizeChatMessage } from '@/lib/sanitize';
-import { AuroraBackground } from '@/components/AuroraBackground';
 
 interface Message {
   id: string;
@@ -373,22 +372,19 @@ export default function AskScreen() {
 
   if (loadingData) {
     return (
-      <AuroraBackground showRadialGradient={true}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={DesignSystem.colors.primary[500]} />
-          <Text style={styles.loadingText}>Loading your coach...</Text>
-        </View>
-      </AuroraBackground>
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={DesignSystem.colors.primary[500]} />
+        <Text style={styles.loadingText}>Loading your coach...</Text>
+      </View>
     );
   }
 
   return (
-    <AuroraBackground showRadialGradient={true}>
-      <KeyboardAvoidingView
-        style={styles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
       {/* Header - Perplexity Style */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -551,13 +547,13 @@ export default function AskScreen() {
         </View>
       </View>
     </KeyboardAvoidingView>
-    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  keyboardContainer: {
+  container: {
     flex: 1,
+    backgroundColor: DesignSystem.colors.neutral[0], // Pure white like Perplexity
   },
   centered: {
     justifyContent: 'center',
@@ -576,9 +572,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: DesignSystem.spacing[6],
     paddingTop: DesignSystem.spacing[12],
     paddingBottom: DesignSystem.spacing[4],
-    backgroundColor: 'transparent',
+    backgroundColor: DesignSystem.colors.neutral[0],
     borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
+    borderBottomColor: DesignSystem.colors.neutral[200],
   },
   backButton: {
     width: 40,
@@ -831,10 +827,9 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     padding: DesignSystem.spacing[5],
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: DesignSystem.colors.neutral[0],
     borderTopWidth: 0.5,
-    borderTopColor: 'rgba(255, 255, 255, 0.3)',
-    backdropFilter: 'blur(10px)',
+    borderTopColor: DesignSystem.colors.neutral[200],
   },
   inputWrapper: {
     flexDirection: 'row',

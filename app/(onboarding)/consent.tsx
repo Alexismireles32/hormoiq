@@ -10,7 +10,6 @@ import {
 import { router } from 'expo-router';
 import { DesignSystem } from '@/constants/DesignSystem';
 import * as Haptics from 'expo-haptics';
-import { AuroraBackground } from '@/components/AuroraBackground';
 
 export default function ConsentScreen() {
   const [agreedToPrivacy, setAgreedToPrivacy] = useState(false);
@@ -26,9 +25,8 @@ export default function ConsentScreen() {
   };
 
   return (
-    <AuroraBackground showRadialGradient={true}>
-      <View style={styles.container}>
-        <ScrollView 
+    <View style={styles.container}>
+      <ScrollView 
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
@@ -125,14 +123,13 @@ export default function ConsentScreen() {
         <View style={{height: 40}} />
       </ScrollView>
     </View>
-    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor removed for Aurora
+    backgroundColor: DesignSystem.colors.background,
   },
   content: {
     padding: DesignSystem.spacing[6],

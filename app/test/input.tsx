@@ -15,7 +15,6 @@ import { HORMONE_RANGES } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { DesignSystem } from '@/constants/DesignSystem';
 import * as Haptics from 'expo-haptics';
-import { AuroraBackground } from '@/components/AuroraBackground';
 
 const HORMONE_INFO = {
   cortisol: {
@@ -141,9 +140,8 @@ export default function InputScreen() {
   const presetValues = getPresetValues();
 
   return (
-    <AuroraBackground showRadialGradient={true}>
-      <View style={styles.container}>
-        {/* Back Button */}
+    <View style={styles.container}>
+      {/* Back Button */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={handleBack}
@@ -281,14 +279,13 @@ export default function InputScreen() {
         </TouchableOpacity>
       </View>
     </View>
-    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor removed for Aurora
+    backgroundColor: DesignSystem.colors.neutral[50],
   },
   backButton: {
     position: 'absolute',

@@ -22,7 +22,6 @@ import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
 import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
-import { AuroraBackground } from '@/components/AuroraBackground';
 
 const { width } = Dimensions.get('window');
 
@@ -164,9 +163,8 @@ export default function InsightsScreen() {
   const insightsSummary = getInsightsSummary();
 
   return (
-    <AuroraBackground showRadialGradient={true}>
-      <View style={styles.container}>
-        {/* Header */}
+    <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Insights</Text>
         <TouchableOpacity
@@ -305,14 +303,13 @@ export default function InsightsScreen() {
         <View style={{ height: DesignSystem.spacing[20] }} />
       </ScrollView>
     </View>
-    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor removed for Aurora
+    backgroundColor: DesignSystem.colors.neutral[50],
   },
   header: {
     flexDirection: 'row',
