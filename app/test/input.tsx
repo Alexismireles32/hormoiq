@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,11 +7,14 @@ import {
   TextInput,
   ScrollView,
   Alert,
+  Animated,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Slider from '@react-native-community/slider';
 import { HORMONE_RANGES } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { DesignSystem } from '@/constants/DesignSystem';
+import * as Haptics from 'expo-haptics';
 
 const HORMONE_INFO = {
   cortisol: {
