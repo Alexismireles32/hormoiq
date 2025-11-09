@@ -11,7 +11,7 @@ import {
 import { Text, View } from '@/components/Themed';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { ReadyCard } from '@/components/ReadyCard';
+import { ReadyCardEnhanced as ReadyCard } from '@/components/ReadyCardEnhanced';
 import { BioAgeCard } from '@/components/BioAgeCard';
 import { SwipeableScoreCards } from '@/components/SwipeableScoreCards';
 import { TestScheduleCard } from '@/components/TestScheduleCard';
