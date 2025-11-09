@@ -1,27 +1,27 @@
 /**
- * HormoIQ Design System
+ * HormoIQ Design System - Eli Health Inspired
  * Single source of truth for all design tokens
- * Professional, minimalistic, mobile-first
+ * Soft, minimal, gradient-focused, mobile-first
  */
 
 export const DesignSystem = {
   // ============================================
-  // COLOR PALETTE - Modern & Accessible
+  // COLOR PALETTE - Eli Health Inspired
   // ============================================
   colors: {
-    // Primary Brand - Soft Lavender (Oura-inspired)
+    // Primary Brand - Soft pastels for a wellness feel
     primary: {
-      50: '#F5F3F9',
-      100: '#EBE7F3',
-      200: '#D7CFE7',
-      300: '#C3B7DB',
-      400: '#AF9FCF',
-      500: '#9B8DC7',  // Main brand color - soft lavender
-      600: '#8A7BB8',
-      700: '#786BA3',
-      800: '#655A8A',
-      900: '#524871',
-      950: '#3F3658',
+      50: '#F0F4FF',
+      100: '#E0E9FF',
+      200: '#C7D8FF',
+      300: '#A4BFFF',
+      400: '#869EFF',
+      500: '#6B7FFF',  // Main brand color - soft blue
+      600: '#5563E5',
+      700: '#4350CC',
+      800: '#3540A3',
+      900: '#2A3381',
+      950: '#1F2660',
     },
     
     // Neutrals - Soft gray scale with warmth (Oura-inspired)
@@ -70,18 +70,27 @@ export const DesignSystem = {
       progesterone: '#A8B5D4',   // Soft lavender
     },
     
-    // Vibrant Gradients for Interactive Dashboard
+    // Soft Gradient Backgrounds - Eli Health Style
     gradients: {
-      success: ['#10b981', '#059669', '#047857'],     // Green gradient
-      warning: ['#fbbf24', '#f59e0b', '#d97706'],     // Amber gradient
-      danger: ['#f87171', '#ef4444', '#dc2626'],      // Red gradient
-      primary: ['#8b5cf6', '#7c3aed', '#6d28d9'],     // Purple gradient
-      ocean: ['#06b6d4', '#0891b2', '#0e7490'],       // Cyan gradient
-      sunset: ['#fb923c', '#f97316', '#ea580c'],      // Orange gradient
-      lavender: ['#9B8DC7', '#8A7BB8', '#786BA3'],    // Brand lavender
-      emerald: ['#34d399', '#10b981', '#059669'],     // Emerald gradient
-      rose: ['#fb7185', '#f43f5e', '#e11d48'],        // Rose gradient
-      sky: ['#7dd3fc', '#38bdf8', '#0ea5e9'],         // Sky gradient
+      // Blurred background gradients (like Eli's screens)
+      yellowBlur: ['#FFFBEB', '#FEF3C7', '#FDE68A'],  // Soft yellow
+      purpleBlur: ['#FAF5FF', '#F3E8FF', '#E9D5FF'],  // Soft purple
+      blueBlur: ['#EFF6FF', '#DBEAFE', '#BFDBFE'],    // Soft blue
+      greenBlur: ['#F0FDF4', '#DCFCE7', '#BBF7D0'],   // Soft green
+      pinkBlur: ['#FFF1F2', '#FFE4E6', '#FECDD3'],    // Soft pink
+      
+      // Pastel accent gradients
+      cortisolGradient: ['#DBEAFE', '#BFDBFE'],       // Blue for cortisol
+      progesteroneGradient: ['#DCFCE7', '#BBF7D0'],   // Green for progesterone
+      testosteroneGradient: ['#FED7AA', '#FDBA74'],   // Orange for testosterone
+      
+      // Multi-color blur (like Eli's dashboard)
+      multiBlur: [
+        'rgba(254, 243, 199, 0.6)',  // Yellow
+        'rgba(243, 232, 255, 0.6)',  // Purple
+        'rgba(191, 219, 254, 0.6)',  // Blue
+        'rgba(187, 247, 208, 0.6)',  // Green
+      ],
     },
     
     // Celebration colors
@@ -145,31 +154,41 @@ export const DesignSystem = {
   },
   
   // ============================================
-  // TYPOGRAPHY - Perfect Scale
+  // TYPOGRAPHY - Eli Health Style (Ultra-light, minimal)
   // ============================================
   typography: {
-    // Font Sizes (1.25 scale for harmony)
+    // Font Sizes
     fontSize: {
-      xs: 12,
-      sm: 14,
-      base: 16,
-      lg: 18,
+      xs: 11,
+      sm: 13,
+      base: 15,
+      lg: 17,
       xl: 20,
       '2xl': 24,
-      '3xl': 30,
-      '4xl': 36,
+      '3xl': 28,
+      '4xl': 34,
       '5xl': 48,
-      '6xl': 60,
+      '6xl': 64,
+      '7xl': 80,   // For large numbers like in Eli
     },
     
-    // Font Weights - Light & Elegant (Oura-inspired)
+    // Font Weights - Ultra-light emphasis (Eli style)
     fontWeight: {
+      ultralight: '100' as any,  // For large numbers
+      thin: '200' as any,         // For headings
       light: '300' as any,
       regular: '400' as any,
       medium: '500' as any,
       semibold: '600' as any,
       bold: '700' as any,
       extrabold: '800' as any,
+    },
+    
+    // Font Families - Serif for marketing, sans for UI
+    fontFamily: {
+      sans: 'System',           // System font for UI
+      serif: 'Georgia',         // Serif for marketing copy
+      mono: 'Courier',          // Monospace for numbers
     },
     
     // Line Heights
@@ -367,36 +386,64 @@ export const DesignSystem = {
   },
   
   // ============================================
-  // COMPONENTS - Pre-defined Styles
+  // COMPONENTS - Eli Health Inspired Styles
   // ============================================
   components: {
-    // Card variants
+    // Card variants - Minimal shadows, clean whites
     card: {
       base: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        padding: 32,
+        borderRadius: 16,
+        padding: 24,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
       },
       compact: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 20,
+        borderRadius: 12,
+        padding: 16,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+        elevation: 1,
       },
       flat: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 24,
+        borderRadius: 12,
+        padding: 20,
       },
+    },
+    
+    // Circular Progress (Eli style - thin stroke)
+    circularProgress: {
+      strokeWidth: 2,
+      size: 180,
+      backgroundColor: '#F3F4F6',
+      foregroundColor: '#000000',
+    },
+    
+    // Pill badges (for health journal tags)
+    pill: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 20,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+    },
+    
+    // Active pill (selected state)
+    pillActive: {
+      backgroundColor: '#000000',
+      borderRadius: 20,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderWidth: 1,
+      borderColor: '#000000',
     },
     
     // Button variants
