@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS hormone_tests (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  hormone_type TEXT NOT NULL CHECK (hormone_type IN ('cortisol', 'testosterone', 'dhea')),
+  hormone_type TEXT NOT NULL CHECK (hormone_type IN ('cortisol', 'testosterone', 'dhea', 'progesterone')),
   value DECIMAL NOT NULL,
   timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
   sleep_quality INTEGER CHECK (sleep_quality BETWEEN 1 AND 5),

@@ -143,6 +143,30 @@ export default function AskScreen() {
         .eq('user_id', user.id)
         .eq('status', 'active');
 
+      // Fetch schedule data (NEW)
+      const { data: scheduleEvents } = await supabase
+        .from('test_schedule_events')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('scheduled_date', { ascending: true });
+
+      // Fetch user schedule settings
+      const { data: userSchedule } = await supabase
+        .from('users')
+        .select('test_schedule_pattern, tests_remaining, kit_received_date')
+        .eq('id', user.id)
+        .single();
+
+      // Calculate schedule statistics
+      const scheduleData = scheduleEvents && scheduleEvents.length > 0 ? {
+        testsCompleted: scheduleEvents.filter(e => e.completed).length,
+        testsRemaining: userSchedule?.tests_remaining || 12,
+        schedulePattern: userSchedule?.test_schedule_pattern || 'Not set',
+        nextTestDate: scheduleEvents.find(e => !e.completed && !e.skipped)?.scheduled_date,
+        adherenceRate: Math.round((scheduleEvents.filter(e => e.completed).length / Math.max(1, scheduleEvents.filter(e => new Date(e.scheduled_date) < new Date()).length)) * 100),
+        missedTests: scheduleEvents.filter(e => !e.completed && !e.skipped && new Date(e.scheduled_date) < new Date()).length,
+      } : undefined;
+
       return {
         userProfile: profile || undefined,
         recentTests: tests || [],
@@ -152,6 +176,7 @@ export default function AskScreen() {
         bioAgeDetails: bioAges?.[0],
         impactAnalyses: impacts || [],
         activeProtocols: protocols || [],
+        scheduleData, // NEW
       };
     } catch (error) {
       console.error('Error fetching user data:', error);

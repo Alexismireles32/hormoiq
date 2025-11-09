@@ -20,31 +20,39 @@ const HORMONE_INFO = {
   cortisol: {
     name: 'Cortisol',
     icon: '💧',
-    color: '#3B82F6',
+    color: DesignSystem.colors.hormones.cortisol,
     unit: 'ng/mL',
   },
   testosterone: {
     name: 'Testosterone',
     icon: '⚡',
-    color: '#EF4444',
+    color: DesignSystem.colors.hormones.testosterone,
     unit: 'ng/dL',
   },
   dhea: {
     name: 'DHEA',
     icon: '🔥',
-    color: '#F97316',
+    color: DesignSystem.colors.hormones.dhea,
     unit: 'ng/dL',
+  },
+  progesterone: {
+    name: 'Progesterone',
+    icon: '🌙',
+    color: DesignSystem.colors.hormones.progesterone,
+    unit: 'ng/mL',
   },
 } as const;
 
 export default function InputScreen() {
-  const { hormone } = useLocalSearchParams<{ hormone: 'cortisol' | 'testosterone' | 'dhea' }>();
+  const { hormone } = useLocalSearchParams<{ hormone: 'cortisol' | 'testosterone' | 'dhea' | 'progesterone' }>();
   const { user } = useAuth();
   
   // Get hormone info and range before early return
   const info = hormone && hormone in HORMONE_INFO ? HORMONE_INFO[hormone] : HORMONE_INFO['cortisol'];
   const range = hormone === 'testosterone' 
     ? HORMONE_RANGES.testosterone.male // Default to male, will adjust based on user profile
+    : hormone === 'progesterone'
+    ? HORMONE_RANGES.progesterone.male // Default to male
     : HORMONE_RANGES[(hormone as 'cortisol' | 'dhea') || 'cortisol'];
 
   // Initialize state with range values (must be called before any early returns)

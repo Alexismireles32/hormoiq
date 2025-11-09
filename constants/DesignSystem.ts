@@ -67,6 +67,7 @@ export const DesignSystem = {
       cortisol: '#8E9FBC',      // Soft blue-gray
       testosterone: '#C4A6A6',   // Soft rose
       dhea: '#D4A574',          // Soft amber
+      progesterone: '#A8B5D4',   // Soft lavender
     },
     
     // Solid Colors (No Gradients - Oura style)

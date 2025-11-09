@@ -63,7 +63,7 @@ export interface TestScheduleEvent {
 export interface HormoneTest {
   id: string;
   user_id: string;
-  hormone_type: 'cortisol' | 'testosterone' | 'dhea';
+  hormone_type: 'cortisol' | 'testosterone' | 'dhea' | 'progesterone';
   value: number;
   timestamp: string;
   sleep_quality: 1 | 2 | 3 | 4 | 5 | null;
@@ -282,6 +282,10 @@ export interface HormoneRanges {
     female: HormoneRange;
   };
   dhea: HormoneRange;
+  progesterone: {
+    male: HormoneRange;
+    female: HormoneRange;
+  };
 }
 
 // Optimal ranges by hormone
@@ -315,5 +319,21 @@ export const HORMONE_RANGES: HormoneRanges = {
     optimal_min: 200,
     optimal_max: 500,
     unit: 'ng/dL',
+  },
+  progesterone: {
+    male: {
+      min: 0,
+      max: 5,
+      optimal_min: 0.2,
+      optimal_max: 1.5,
+      unit: 'ng/mL',
+    },
+    female: {
+      min: 0,
+      max: 40,
+      optimal_min: 5,
+      optimal_max: 25,
+      unit: 'ng/mL',
+    },
   },
 };
