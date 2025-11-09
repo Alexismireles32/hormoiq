@@ -129,7 +129,7 @@ export default function DashboardScreen() {
 
   const handleStartFirstTest = () => {
     setShowTestTutorial(false);
-    router.push('/test/input');
+    router.push('/test');
   };
 
   const loadData = async () => {
@@ -278,7 +278,7 @@ export default function DashboardScreen() {
             title="Welcome to HormoIQ"
             description="Start your hormone tracking journey by logging your first test. It takes less than a minute!"
             actionLabel="Log Your First Test"
-            onActionPress={() => router.push('/test/input')}
+            onActionPress={() => router.push('/test')}
             secondaryActionLabel="How to Use Test Strips"
             onSecondaryActionPress={() => setShowTestTutorial(true)}
           />
@@ -609,7 +609,7 @@ export default function DashboardScreen() {
       {/* Floating TEST™ Button - Oura Style (Solid Color) */}
       <AnimatedTouchable
         style={styles.fab}
-        onPress={() => router.push('/test/input')}
+        onPress={() => router.push('/test')}
         hapticStyle={Haptics.ImpactFeedbackStyle.Heavy}
         scaleValue={0.94}
       >
