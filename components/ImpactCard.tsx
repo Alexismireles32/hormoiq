@@ -48,12 +48,13 @@ export function ImpactCard({ tests, userGender }: ImpactCardProps) {
     setShowDetails(true);
   };
 
-  // Enhanced locked state with progress
+  // Story-Driven Locked State (100/100 UX)
   if (!impactData.can_calculate) {
-    const requiredTests = 5;
+    const requiredTests = 10;
+    const requiredDays = 14;
     const progress = (tests.length / requiredTests) * 100;
     
-    // Check if they have enough time span
+    // Check time span
     const sortedTests = [...tests].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
@@ -64,7 +65,9 @@ export function ImpactCard({ tests, userGender }: ImpactCardProps) {
             (1000 * 60 * 60 * 24)
         )
       : 0;
-    const needsMoreTime = tests.length >= 5 && daysBetween < 14;
+    const needsMoreTime = daysBetween < requiredDays;
+    const testsRemaining = Math.max(0, requiredTests - tests.length);
+    const daysRemaining = Math.max(0, requiredDays - daysBetween);
 
     return (
       <TouchableOpacity
@@ -76,32 +79,46 @@ export function ImpactCard({ tests, userGender }: ImpactCardProps) {
         activeOpacity={0.8}
       >
         <View style={styles.lockedContainer}>
-          {/* Progress Ring */}
-          <CircularProgress
-            progress={progress}
-            size={140}
-            strokeWidth={10}
-            color={DesignSystem.colors.primary[500]}
-            backgroundColor={DesignSystem.colors.neutral[200]}
-            showPercentage={false}
-          >
-            <Text style={styles.lockIcon}>🔒</Text>
-          </CircularProgress>
-
-          <Text style={styles.lockedTitle}>IMPACT™ Locked</Text>
-          <Text style={styles.lockedProgress}>
-            {tests.length} of {requiredTests} tests
-          </Text>
-          <Text style={styles.lockedSubtitle}>
-            {needsMoreTime 
-              ? `Need tests over ${14 - daysBetween} more days (${daysBetween}/14 days)`
-              : `${impactData.tests_needed} more test${impactData.tests_needed !== 1 ? 's' : ''} needed`
-            }
+          {/* Story Section - Build Anticipation */}
+          <Text style={styles.lockedStory}>
+            "Jake found out his sleep routine increased testosterone by 18%. Maria discovered cold showers tanked her cortisol. What works for YOU?"
           </Text>
 
-          {/* What You'll Get Preview */}
+          {/* Unlock Gift Message */}
+          <View style={styles.unlockRequirement}>
+            <Text style={styles.unlockGift}>
+              🎁 {testsRemaining} more test{testsRemaining !== 1 ? 's' : ''} to see your personalized Impact™ insights
+            </Text>
+            {needsMoreTime && (
+              <Text style={styles.unlockDetail}>
+                ({daysRemaining} more days needed - currently {daysBetween}/{requiredDays} days)
+              </Text>
+            )}
+            {!needsMoreTime && testsRemaining > 0 && (
+              <Text style={styles.unlockDetail}>
+                (Time requirement met! ✓)
+              </Text>
+            )}
+          </View>
+
+          {/* Progress Bar with Context */}
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${Math.min(100, progress)}%` }
+                ]} 
+              />
+            </View>
+            <Text style={styles.progressLabel}>
+              {tests.length}/{requiredTests} tests • {Math.round(progress)}%
+            </Text>
+          </View>
+
+          {/* What You'll Discover Preview */}
           <View style={styles.previewSection}>
-            <Text style={styles.previewTitle}>You'll unlock:</Text>
+            <Text style={styles.previewTitle}>You'll discover:</Text>
             <View style={styles.previewItem}>
               <Text style={styles.previewIcon}>📊</Text>
               <Text style={styles.previewText}>Track intervention effectiveness</Text>
@@ -321,8 +338,52 @@ const styles = StyleSheet.create({
     ...DesignSystem.shadows.sm,
   },
   lockedContainer: {
-    alignItems: 'center',
     paddingVertical: DesignSystem.spacing[5],
+  },
+  // Story-Driven Locked State Styles (100/100 UX)
+  lockedStory: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: '#4B5563',
+    lineHeight: 20,
+    marginBottom: 16,
+    paddingLeft: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#D1D5DB',
+  },
+  unlockRequirement: {
+    marginBottom: 12,
+  },
+  unlockGift: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: DesignSystem.colors.primary[500],
+    marginBottom: 4,
+  },
+  unlockDetail: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  progressBarContainer: {
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 6,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: DesignSystem.colors.primary[500],
+    borderRadius: 4,
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'right',
   },
   lockIcon: {
     fontSize: DesignSystem.iconSize['2xl'],
