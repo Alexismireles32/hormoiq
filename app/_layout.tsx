@@ -103,19 +103,27 @@ function RootLayoutNav() {
     // Allow admin routes without redirection
     if (inAdminGroup) return;
 
-    // Always allow access - skip auth/onboarding for anonymous users
-    if (session) {
+    if (!session) {
+      // No session - force to auth screens
+      if (!inAuthGroup) {
+        router.replace('/(auth)/sign-in');
+      }
+    } else {
+      // Has session - check onboarding
       const needsOnboarding = !userProfile?.onboarding_completed;
 
-      // Only redirect to onboarding if explicitly in auth group
-      if (needsOnboarding && inAuthGroup) {
-        router.replace('/(onboarding)');
-      } else if (!needsOnboarding && inAuthGroup) {
-        // User completed onboarding, go to tabs
-        router.replace('/(tabs)');
-      } else if (!inTabsGroup && !inOnboardingGroup && !inAuthGroup && !inAdminGroup) {
-        // Not in any known group, go to tabs
-        router.replace('/(tabs)');
+      if (needsOnboarding) {
+        // Needs onboarding - redirect from auth to onboarding
+        if (inAuthGroup) {
+          router.replace('/(onboarding)');
+        } else if (!inOnboardingGroup) {
+          router.replace('/(onboarding)');
+        }
+      } else {
+        // Completed onboarding - allow access to app
+        if (inAuthGroup || inOnboardingGroup) {
+          router.replace('/(tabs)');
+        }
       }
     }
   }, [session, userProfile, segments, loading, profileLoading]);
