@@ -34,6 +34,31 @@ interface Message {
   isStreaming?: boolean; // For streaming animation
 }
 
+// Helper function to parse markdown bold text
+function parseMarkdownText(text: string): Array<{ text: string; bold: boolean }> {
+  const parts: Array<{ text: string; bold: boolean }> = [];
+  const regex = /\*\*([^*]+)\*\*/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      parts.push({ text: text.substring(lastIndex, match.index), bold: false });
+    }
+    // Add the bold text
+    parts.push({ text: match[1], bold: true });
+    lastIndex = regex.lastIndex;
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push({ text: text.substring(lastIndex), bold: false });
+  }
+
+  return parts.length > 0 ? parts : [{ text, bold: false }];
+}
+
 export default function AskScreen() {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -262,7 +287,7 @@ export default function AskScreen() {
       setMessages((prev) => [...prev, assistantMessage]);
       setLoadingPhase(null);
 
-      // Simulate streaming by progressively revealing text
+      // Simulate streaming by progressively revealing text with auto-scroll
       const words = sanitizedReply.split(' ');
       let currentText = '';
       for (let i = 0; i < words.length; i++) {
@@ -274,6 +299,12 @@ export default function AskScreen() {
               : msg
           )
         );
+        
+        // Auto-scroll to bottom as text generates (every 5 words for smoothness)
+        if (i % 5 === 0) {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }
+        
         await new Promise((resolve) => setTimeout(resolve, 30)); // 30ms per word
       }
 
@@ -283,6 +314,11 @@ export default function AskScreen() {
           msg.id === assistantMessageId ? { ...msg, isStreaming: false } : msg
         )
       );
+
+      // Final scroll to ensure everything is visible
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
 
       // Save both messages to database
       await supabase.from('chat_messages').insert([
@@ -416,15 +452,25 @@ export default function AskScreen() {
               </View>
             )}
             {message.role === 'assistant' ? (
-              // Format assistant messages with proper paragraph spacing
-              message.content.split('\n\n').map((paragraph, pIndex) => (
-                <Text
-                  key={`${message.id}-p${pIndex}`}
-                  style={[styles.messageText, styles.assistantText, pIndex > 0 && styles.paragraphSpacing]}
-                >
-                  {paragraph.trim()}
-                </Text>
-              ))
+              // Format assistant messages with proper paragraph spacing and markdown bold
+              message.content.split('\n\n').map((paragraph, pIndex) => {
+                const parsedParts = parseMarkdownText(paragraph.trim());
+                return (
+                  <Text
+                    key={`${message.id}-p${pIndex}`}
+                    style={[styles.messageText, styles.assistantText, pIndex > 0 && styles.paragraphSpacing]}
+                  >
+                    {parsedParts.map((part, partIndex) => (
+                      <Text
+                        key={`${message.id}-p${pIndex}-part${partIndex}`}
+                        style={part.bold ? styles.boldText : undefined}
+                      >
+                        {part.text}
+                      </Text>
+                    ))}
+                  </Text>
+                );
+              })
             ) : (
               <Text style={[styles.messageText, styles.userText]}>
                 {message.content}
@@ -703,6 +749,10 @@ const styles = StyleSheet.create({
     fontWeight: DesignSystem.typography.fontWeight.medium,
   },
   assistantText: {
+    color: DesignSystem.colors.neutral[900],
+  },
+  boldText: {
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
     color: DesignSystem.colors.neutral[900],
   },
   paragraphSpacing: {
