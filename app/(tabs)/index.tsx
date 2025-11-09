@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ReadyCard } from '@/components/ReadyCard';
 import { BioAgeCard } from '@/components/BioAgeCard';
 import { SwipeableScoreCards } from '@/components/SwipeableScoreCards';
+import { TestScheduleCard } from '@/components/TestScheduleCard';
 import { FeatureExplainer, FeatureType } from '@/components/FeatureExplainer';
 import { SkeletonLoader, SkeletonCard, SkeletonScoreCard } from '@/components/SkeletonLoader';
 import { EmptyStateIllustration } from '@/components/EmptyStateIllustration';
@@ -290,6 +291,13 @@ export default function DashboardScreen() {
               <Text style={styles.welcomeButtonText}>Preview Test Input</Text>
             </TouchableOpacity>
           </AnimatedCard>
+        )}
+
+        {/* Test Schedule Card */}
+        {user && (
+          <RNView style={styles.section}>
+            <TestScheduleCard userId={user.id} />
+          </RNView>
         )}
 
         {/* Swipeable Score Cards - Oura Style */}
