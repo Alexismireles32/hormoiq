@@ -20,6 +20,8 @@ import { EmptyStateIllustration } from '@/components/EmptyStateIllustration';
 import { ProgressTracker } from '@/components/ProgressTracker';
 import { GuidedTour, defaultTourSteps } from '@/components/GuidedTour';
 import { FirstTestTutorial } from '@/components/FirstTestTutorial';
+import { AnimatedTouchable } from '@/components/AnimatedTouchable';
+import { AnimatedCard } from '@/components/AnimatedCard';
 import { supabase } from '@/lib/supabase';
 import { HormoneTest } from '@/types';
 import * as Haptics from 'expo-haptics';
@@ -420,17 +422,18 @@ export default function DashboardScreen() {
           
           <Text style={styles.sectionSubtitle}>Choose a hormone to log</Text>
           <RNView style={styles.quickActions}>
-            {HORMONES.map((hormone) => (
-              <TouchableOpacity
-                key={hormone.type}
-                style={styles.quickActionButton}
-                onPress={() => handleHormoneSelect(hormone.type)}
-                activeOpacity={0.7}
-              >
-                <RNView style={[styles.hormoneDot, { backgroundColor: hormone.color }]} />
-                <Text style={styles.quickActionIcon}>{hormone.icon}</Text>
-                <Text style={styles.quickActionText}>{hormone.name}</Text>
-              </TouchableOpacity>
+            {HORMONES.map((hormone, index) => (
+              <AnimatedCard key={hormone.type} index={index} style={{ flex: 1 }}>
+                <AnimatedTouchable
+                  style={styles.quickActionButton}
+                  onPress={() => handleHormoneSelect(hormone.type)}
+                  hapticStyle={Haptics.ImpactFeedbackStyle.Medium}
+                >
+                  <RNView style={[styles.hormoneDot, { backgroundColor: hormone.color }]} />
+                  <Text style={styles.quickActionIcon}>{hormone.icon}</Text>
+                  <Text style={styles.quickActionText}>{hormone.name}</Text>
+                </AnimatedTouchable>
+              </AnimatedCard>
             ))}
           </RNView>
         </RNView>
@@ -439,27 +442,28 @@ export default function DashboardScreen() {
         <RNView style={styles.section}>
           <Text style={styles.sectionTitle}>Explore Features</Text>
           <RNView style={styles.featureGrid}>
-            {FEATURES.map((feature) => (
-              <TouchableOpacity
-                key={feature.id}
-                style={styles.featureCard}
-                onPress={() => handleFeaturePress(feature.route)}
-                activeOpacity={0.8}
-              >
-                <RNView style={styles.featureCardHeader}>
-                  <RNView style={[styles.iconCircle, { backgroundColor: feature.backgroundColor }]}>
-                    <Text style={styles.featureIcon}>{feature.icon}</Text>
+            {FEATURES.map((feature, index) => (
+              <AnimatedCard key={feature.id} index={index + 3} style={{ flex: 1 }}>
+                <AnimatedTouchable
+                  style={styles.featureCard}
+                  onPress={() => handleFeaturePress(feature.route)}
+                  scaleValue={0.98}
+                >
+                  <RNView style={styles.featureCardHeader}>
+                    <RNView style={[styles.iconCircle, { backgroundColor: feature.backgroundColor }]}>
+                      <Text style={styles.featureIcon}>{feature.icon}</Text>
+                    </RNView>
+                    <TouchableOpacity
+                      style={styles.featureInfoButton}
+                      onPress={() => handleShowExplainer(feature.type)}
+                    >
+                      <Text style={styles.featureInfoIcon}>ℹ️</Text>
+                    </TouchableOpacity>
                   </RNView>
-                  <TouchableOpacity
-                    style={styles.featureInfoButton}
-                    onPress={() => handleShowExplainer(feature.type)}
-                  >
-                    <Text style={styles.featureInfoIcon}>ℹ️</Text>
-                  </TouchableOpacity>
-                </RNView>
-                <Text style={styles.featureCardName}>{feature.name}</Text>
-                <Text style={styles.featureCardDescription}>{feature.description}</Text>
-              </TouchableOpacity>
+                  <Text style={styles.featureCardName}>{feature.name}</Text>
+                  <Text style={styles.featureCardDescription}>{feature.description}</Text>
+                </AnimatedTouchable>
+              </AnimatedCard>
             ))}
           </RNView>
         </RNView>
@@ -505,14 +509,15 @@ export default function DashboardScreen() {
       </ScrollView>
 
       {/* Floating TEST™ Button - Oura Style (Solid Color) */}
-      <TouchableOpacity
+      <AnimatedTouchable
         style={styles.fab}
         onPress={() => router.push('/test/input')}
-        activeOpacity={0.9}
+        hapticStyle={Haptics.ImpactFeedbackStyle.Heavy}
+        scaleValue={0.94}
       >
         <Text style={styles.fabIcon}>🧪</Text>
         <Text style={styles.fabText}>TEST™</Text>
-      </TouchableOpacity>
+      </AnimatedTouchable>
 
       {/* Feature Explainer Modal */}
       <FeatureExplainer
