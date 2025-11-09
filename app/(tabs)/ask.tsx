@@ -23,6 +23,7 @@ import {
 import { DesignSystem } from '@/constants/DesignSystem';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
+import { sanitizeAIResponse, sanitizeChatMessage } from '@/lib/sanitize';
 
 interface Message {
   id: string;
@@ -185,8 +186,15 @@ export default function AskScreen() {
   };
 
   const handleSendMessage = async (messageText?: string) => {
-    const textToSend = messageText || inputText.trim();
-    if (!textToSend || !user) return;
+    const rawText = messageText || inputText.trim();
+    if (!rawText || !user) return;
+
+    // Sanitize and validate user input
+    const textToSend = sanitizeChatMessage(rawText);
+    if (!textToSend) {
+      Alert.alert('Invalid Input', 'Please enter a valid message (max 500 characters).');
+      return;
+    }
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -232,10 +240,13 @@ export default function AskScreen() {
       });
 
       // Add assistant message to UI
+      // Sanitize AI response to prevent XSS
+      const sanitizedReply = sanitizeAIResponse(response.reply);
+      
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: response.reply,
+        content: sanitizedReply,
         timestamp: new Date().toISOString(),
       };
 

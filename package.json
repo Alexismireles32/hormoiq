@@ -9,7 +9,10 @@
     "web": "expo start --web",
     "test": "jest --watchAll",
     "lint": "expo lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "security:audit": "npm audit --production",
+    "security:fix": "npm audit fix",
+    "security:check": "npm audit && npm outdated"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -17,13 +20,17 @@
     "@react-native-community/slider": "^5.1.1",
     "@react-navigation/native": "^7.1.8",
     "@supabase/supabase-js": "^2.80.0",
+    "@types/dompurify": "^3.0.5",
+    "dompurify": "^3.3.0",
     "expo": "~54.0.23",
     "expo-constants": "~18.0.10",
+    "expo-file-system": "^19.0.17",
     "expo-font": "~14.0.9",
     "expo-haptics": "^15.0.7",
     "expo-linear-gradient": "^15.0.7",
     "expo-linking": "~8.0.8",
     "expo-router": "~6.0.14",
+    "expo-sharing": "^14.0.7",
     "expo-splash-screen": "~31.0.10",
     "expo-status-bar": "~3.0.8",
     "expo-web-browser": "~15.0.9",
@@ -42,6 +49,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "babel-plugin-transform-remove-console": "^6.9.4",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~10.0.0",
     "react-test-renderer": "19.1.0",

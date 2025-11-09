@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase';
 import * as Haptics from 'expo-haptics';
 import { DesignSystem } from '@/constants/DesignSystem';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { exportUserData, deleteAllUserData, generateDataSummary } from '@/lib/dataExport';
 
 export default function ProfileScreen() {
   const { user, signOut, isAnonymous } = useAuth();
@@ -104,6 +105,83 @@ export default function ProfileScreen() {
       ]);
     } catch (error) {
       console.error('Error resetting tour:', error);
+    }
+  };
+
+  const handleExportData = async () => {
+    if (!user) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
+    Alert.alert(
+      'Export Your Data',
+      'This will create a JSON file with all your HormoIQ data that you can save or share.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Export',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await exportUserData(user.id);
+            } catch (error) {
+              // Error handled in exportUserData
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+
+    // First show summary
+    try {
+      const summary = await generateDataSummary(user.id);
+      
+      Alert.alert(
+        '⚠️ Delete Account',
+        `This will permanently delete:\n\n${summary}\n\nThis action CANNOT be undone!`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete Forever',
+            style: 'destructive',
+            onPress: () => {
+              // Second confirmation
+              Alert.alert(
+                'Final Confirmation',
+                'Are you absolutely sure? All your data will be permanently deleted.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Yes, Delete Everything',
+                    style: 'destructive',
+                    onPress: async () => {
+                      try {
+                        setLoading(true);
+                        await deleteAllUserData(user.id);
+                        await signOut();
+                        router.replace('/(auth)/sign-in');
+                      } catch (error) {
+                        setLoading(false);
+                        // Error handled in deleteAllUserData
+                      }
+                    },
+                  },
+                ]
+              );
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Could not load account summary. Please try again.');
     }
   };
 
@@ -303,6 +381,62 @@ export default function ProfileScreen() {
               <Text style={styles.helpDescription}>Reset and replay the guided tour</Text>
             </View>
             <Text style={styles.helpArrow}>↻</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Data & Privacy Section */}
+        <View style={styles.legalSection}>
+          <Text style={styles.sectionTitle}>Data & Privacy</Text>
+          
+          <TouchableOpacity
+            style={styles.legalButton}
+            onPress={handleExportData}
+            disabled={loading}
+          >
+            <View>
+              <Text style={styles.legalButtonText}>Export My Data</Text>
+              <Text style={styles.legalButtonSubtext}>Download all your data (GDPR)</Text>
+            </View>
+            <Text style={styles.helpArrow}>↓</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.legalButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(legal)/privacy');
+            }}
+          >
+            <Text style={styles.legalButtonText}>Privacy Policy</Text>
+            <Text style={styles.helpArrow}>→</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.legalButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(legal)/terms');
+            }}
+          >
+            <Text style={styles.legalButtonText}>Terms of Service</Text>
+            <Text style={styles.helpArrow}>→</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Danger Zone */}
+        <View style={styles.dangerSection}>
+          <Text style={styles.sectionTitle}>Danger Zone</Text>
+          
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDeleteAccount}
+            disabled={loading}
+          >
+            <View>
+              <Text style={styles.deleteButtonText}>Delete Account</Text>
+              <Text style={styles.deleteButtonSubtext}>Permanently delete all data</Text>
+            </View>
+            <Text style={styles.deleteIcon}>🗑️</Text>
           </TouchableOpacity>
         </View>
 
@@ -581,6 +715,65 @@ const styles = StyleSheet.create({
     fontSize: DesignSystem.iconSize.md,
     color: DesignSystem.colors.neutral[400],
     marginLeft: DesignSystem.spacing[2],
+  },
+  legalSection: {
+    marginTop: DesignSystem.spacing[8],
+  },
+  legalButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: DesignSystem.colors.surface,
+    paddingVertical: DesignSystem.spacing[4],
+    paddingHorizontal: DesignSystem.spacing[4],
+    borderRadius: DesignSystem.radius.md,
+    marginTop: DesignSystem.spacing[3],
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.neutral[200],
+  },
+  legalButtonText: {
+    fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.normal,
+    color: DesignSystem.colors.text.secondary,
+  },
+  legalButtonSubtext: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.normal,
+    color: DesignSystem.colors.neutral[400],
+    marginTop: 2,
+  },
+  dangerSection: {
+    marginTop: DesignSystem.spacing[8],
+    paddingTop: DesignSystem.spacing[6],
+    borderTopWidth: 1,
+    borderTopColor: DesignSystem.colors.error.light,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: DesignSystem.colors.errorBackground,
+    paddingVertical: DesignSystem.spacing[4],
+    paddingHorizontal: DesignSystem.spacing[4],
+    borderRadius: DesignSystem.radius.md,
+    marginTop: DesignSystem.spacing[3],
+    borderWidth: 1.5,
+    borderColor: DesignSystem.colors.error.DEFAULT,
+  },
+  deleteButtonText: {
+    fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.error.DEFAULT,
+  },
+  deleteButtonSubtext: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.normal,
+    color: DesignSystem.colors.error.DEFAULT,
+    marginTop: 2,
+    opacity: 0.8,
+  },
+  deleteIcon: {
+    fontSize: 24,
   },
   signOutButton: {
     backgroundColor: DesignSystem.colors.error.light,

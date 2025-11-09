@@ -123,9 +123,9 @@ function RootLayoutNav() {
       if (needsOnboarding) {
         // Needs onboarding - redirect from auth to onboarding
         if (inAuthGroup) {
-          router.replace('/(onboarding)');
+          router.replace('/(onboarding)/consent');
         } else if (!inOnboardingGroup) {
-          router.replace('/(onboarding)');
+          router.replace('/(onboarding)/consent');
         }
       } else {
         // Completed onboarding - allow access to app
