@@ -368,16 +368,59 @@ export default function TrackScreen() {
         )}
       </View>
 
+      {/* Timeline Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Timeline</Text>
+        <Text style={styles.sectionSubtitle}>
+          Your testing journey at a glance
+        </Text>
+        <View style={styles.timelineCard}>
+          <View style={styles.timelineItem}>
+            <View style={styles.timelineDot} />
+            <View style={styles.timelineContent}>
+              <Text style={styles.timelineLabel}>First Test</Text>
+              <Text style={styles.timelineDate}>
+                {tests.length > 0
+                  ? new Date(tests[tests.length - 1].timestamp).toLocaleDateString()
+                  : 'N/A'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.timelineLine} />
+          <View style={styles.timelineItem}>
+            <View style={styles.timelineDot} />
+            <View style={styles.timelineContent}>
+              <Text style={styles.timelineLabel}>Latest Test</Text>
+              <Text style={styles.timelineDate}>
+                {tests.length > 0
+                  ? new Date(tests[0].timestamp).toLocaleDateString()
+                  : 'N/A'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.timelineLine} />
+          <View style={styles.timelineItem}>
+            <View style={[styles.timelineDot, styles.timelineDotActive]} />
+            <View style={styles.timelineContent}>
+              <Text style={styles.timelineLabel}>Next Goal</Text>
+              <Text style={styles.timelineValue}>
+                {stats.thisWeek >= 3 ? 'Keep it up! 🎯' : `${3 - stats.thisWeek} more this week`}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
       {/* Test List */}
       <View style={styles.listSection}>
         <Text style={styles.sectionTitle}>Recent Tests</Text>
-        {filteredTests.map((test) => (
-          <TouchableOpacity
-            key={test.id}
-            style={styles.testCard}
-            onPress={() => handleTestPress(test)}
-            activeOpacity={0.7}
-          >
+        {filteredTests.map((test, index) => (
+          <AnimatedCard key={test.id} index={index} style={{ marginBottom: DesignSystem.spacing[3] }}>
+            <AnimatedTouchable
+              style={styles.testCard}
+              onPress={() => handleTestPress(test)}
+              scaleValue={0.98}
+            >
             <View style={[styles.testIconContainer, { backgroundColor: HORMONE_COLORS[test.hormone_type] }]}>
               <Text style={styles.testIcon}>{HORMONE_ICONS[test.hormone_type]}</Text>
             </View>
@@ -400,7 +443,8 @@ export default function TrackScreen() {
                 {test.hormone_type === 'cortisol' ? 'ng/mL' : 'ng/dL'}
               </Text>
             </View>
-          </TouchableOpacity>
+            </AnimatedTouchable>
+          </AnimatedCard>
         ))}
       </View>
 
@@ -476,6 +520,15 @@ const styles = StyleSheet.create({
     fontWeight: DesignSystem.typography.fontWeight.light,
     color: DesignSystem.colors.neutral[500],
   },
+  section: {
+    marginBottom: DesignSystem.spacing[6],
+  },
+  sectionSubtitle: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[600],
+    marginBottom: DesignSystem.spacing[4],
+  },
   filterContainer: {
     gap: 8,
     marginBottom: 24,
@@ -534,13 +587,66 @@ const styles = StyleSheet.create({
   listSection: {
     marginBottom: 24,
   },
+  timelineCard: {
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    borderRadius: DesignSystem.radius.xl,
+    padding: DesignSystem.spacing[6],
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
+    ...DesignSystem.shadows.sm,
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: DesignSystem.colors.neutral[300],
+    marginRight: DesignSystem.spacing[4],
+  },
+  timelineDotActive: {
+    backgroundColor: DesignSystem.colors.primary[500],
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+  },
+  timelineLine: {
+    width: 2,
+    height: 24,
+    backgroundColor: DesignSystem.colors.neutral[200],
+    marginLeft: 5,
+    marginVertical: DesignSystem.spacing[2],
+  },
+  timelineContent: {
+    flex: 1,
+  },
+  timelineLabel: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.neutral[600],
+    marginBottom: 2,
+  },
+  timelineDate: {
+    fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.neutral[900],
+  },
+  timelineValue: {
+    fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.primary[600],
+  },
   testCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: '#F9FAFB',
-    marginBottom: 12,
+    padding: DesignSystem.spacing[4],
+    borderRadius: DesignSystem.radius.xl,
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
+    ...DesignSystem.shadows.sm,
   },
   testIconContainer: {
     width: 48,
