@@ -69,7 +69,10 @@ export default function OnboardingScreen() {
           hormone_therapy_unknown: onHormoneTherapy === 'not_sure',
           onboarding_completed: true,
         },
-        { onConflict: 'id' } // Update if user already exists
+        { 
+          onConflict: 'id',
+          ignoreDuplicates: false  // Force update instead of ignoring
+        }
       );
 
       if (error) throw error;
@@ -115,7 +118,10 @@ export default function OnboardingScreen() {
                   hormone_therapy_unknown: false,
                   onboarding_completed: true,
                 },
-                { onConflict: 'id' } // Update if user already exists
+                { 
+                  onConflict: 'id',
+                  ignoreDuplicates: false  // Force update
+                }
               );
 
               if (error) throw error;
