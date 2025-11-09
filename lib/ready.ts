@@ -59,9 +59,9 @@ export function calculateReadyScore(
   allTests: HormoneTest[],
   userGender: 'male' | 'female' | 'other' = 'male'
 ): ReadyScore {
-  // Check if we have minimum data
+  // Check if we have minimum data (changed to 1 for progressive accuracy)
   const recentTests = getRecentTests(allTests, 7); // Last 7 days
-  const canCalculate = recentTests.length >= 3;
+  const canCalculate = recentTests.length >= 1; // Progressive: Show from test 1
 
   if (!canCalculate) {
     return {
@@ -77,7 +77,7 @@ export function calculateReadyScore(
       },
       protocol: [],
       can_calculate: false,
-      tests_needed: 3 - recentTests.length,
+      tests_needed: 1 - recentTests.length,
     };
   }
 

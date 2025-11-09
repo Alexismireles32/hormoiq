@@ -15,6 +15,7 @@ import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 're
 import { DesignSystem } from '@/constants/DesignSystem';
 import { CircularProgress } from './ProgressBar';
 import { router } from 'expo-router';
+import { AccuracyBadge, calculateAccuracyLevel, getAccuracyRequirements, getAccuracyMessage } from './AccuracyBadge';
 
 interface ReadyCardProps {
   tests: HormoneTest[];
@@ -25,6 +26,11 @@ export function ReadyCard({ tests, userGender }: ReadyCardProps) {
   const [showBreakdown, setShowBreakdown] = useState(false);
 
   const readyData = calculateReadyScore(tests, userGender);
+  
+  // Calculate accuracy level for progressive display
+  const uniqueDays = new Set(tests.map(t => new Date(t.timestamp).toDateString())).size;
+  const requirements = getAccuracyRequirements('readyscore');
+  const accuracyLevel = calculateAccuracyLevel(tests.length, uniqueDays, requirements);
 
   const handleShare = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -129,16 +135,14 @@ export function ReadyCard({ tests, userGender }: ReadyCardProps) {
         activeOpacity={0.7}
       >
         <View style={styles.header}>
-          <Text style={styles.label}>Your READY Score</Text>
-          <View style={[styles.confidenceBadge, {
-            backgroundColor: readyData.confidence === 'high' ? DesignSystem.colors.success.light : 
-                            readyData.confidence === 'medium' ? DesignSystem.colors.warning.light : 
-                            DesignSystem.colors.error.light
-          }]}>
-            <Text style={styles.confidenceText}>
-              {readyData.confidence === 'high' ? 'High ✅' :
-               readyData.confidence === 'medium' ? 'Med 🟡' : 'Low ⚠️'}
-            </Text>
+          <View style={styles.labelWithBadge}>
+            <Text style={styles.label}>Your READY Score</Text>
+            <AccuracyBadge 
+              level={accuracyLevel}
+              size="sm"
+              showLabel={true}
+              testCount={tests.length}
+            />
           </View>
         </View>
 
@@ -440,6 +444,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
+  },
+  labelWithBadge: {
+    alignItems: 'center',
+    gap: DesignSystem.spacing[2],
   },
   label: {
     fontSize: 13,
