@@ -76,17 +76,19 @@ export function sanitizeChatMessage(message: string): string {
 
 /**
  * Sanitize AI response
- * Allows basic formatting but prevents XSS
+ * React Native version - strips dangerous content but allows text
  */
 export function sanitizeAIResponse(response: string): string {
   if (!response) return '';
   
-  // Allow basic formatting tags
-  return DOMPurify.sanitize(response, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li', 'code'],
-    ALLOWED_ATTR: [],
-    ALLOW_DATA_ATTR: false,
-  });
+  // Remove HTML tags (React Native Text doesn't render HTML anyway)
+  let clean = response.replace(/<[^>]*>/g, '');
+  
+  // Remove script-like content
+  clean = clean.replace(/javascript:/gi, '');
+  clean = clean.replace(/on\w+\s*=/gi, '');
+  
+  return clean;
 }
 
 /**
