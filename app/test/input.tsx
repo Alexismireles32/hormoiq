@@ -72,6 +72,13 @@ export default function InputScreen() {
     const rounded = Math.round(val * 10) / 10;
     setValue(rounded);
     setInputText(rounded.toString());
+    
+    // Haptic feedback on significant value changes
+    const prevStatus = getStatus(value);
+    const newStatus = getStatus(rounded);
+    if (prevStatus.text !== newStatus.text) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
   };
 
   const handleTextChange = (text: string) => {
@@ -84,10 +91,13 @@ export default function InputScreen() {
 
   const handleNext = () => {
     if (!value || value < range.min || value > range.max) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Invalid Value', `Please enter a value between ${range.min} and ${range.max}`);
       return;
     }
 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
     // Navigate to context screen with hormone and value
     router.push({
       pathname: '/test/context',
@@ -97,9 +107,41 @@ export default function InputScreen() {
       },
     });
   };
+  
+  const handleBack = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.back();
+  };
+  
+  // Quick preset buttons for common values
+  const getPresetValues = () => {
+    const optimalMid = (range.optimal_min + range.optimal_max) / 2;
+    return [
+      { label: 'Low', value: range.optimal_min * 0.8 },
+      { label: 'Optimal', value: optimalMid },
+      { label: 'High', value: range.optimal_max * 1.2 },
+    ];
+  };
+  
+  const handlePresetValue = (presetValue: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setValue(presetValue);
+    setInputText(presetValue.toFixed(1));
+  };
+
+  const presetValues = getPresetValues();
 
   return (
     <View style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={handleBack}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.backIcon}>←</Text>
+      </TouchableOpacity>
+      
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
@@ -132,9 +174,37 @@ export default function InputScreen() {
           </Text>
         </View>
 
+        {/* Quick Preset Buttons */}
+        <View style={styles.presetsContainer}>
+          <Text style={styles.presetsLabel}>Quick values:</Text>
+          <View style={styles.presetsRow}>
+            {presetValues.map((preset, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.presetButton,
+                  Math.abs(value - preset.value) < 0.1 && styles.presetButtonActive,
+                ]}
+                onPress={() => handlePresetValue(preset.value)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.presetButtonText,
+                    Math.abs(value - preset.value) < 0.1 && styles.presetButtonTextActive,
+                  ]}
+                >
+                  {preset.label}
+                </Text>
+                <Text style={styles.presetButtonValue}>{preset.value.toFixed(1)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         {/* Slider */}
         <View style={styles.sliderContainer}>
-          <Text style={styles.sliderLabel}>Drag to adjust</Text>
+          <Text style={styles.sliderLabel}>Or drag to adjust</Text>
           <Slider
             style={styles.slider}
             minimumValue={range.min}
@@ -207,33 +277,53 @@ export default function InputScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: DesignSystem.colors.neutral[50],
+  },
+  backButton: {
+    position: 'absolute',
+    top: DesignSystem.spacing[12],
+    left: DesignSystem.spacing[6],
+    width: DesignSystem.touchTarget.comfortable,
+    height: DesignSystem.touchTarget.comfortable,
+    borderRadius: DesignSystem.radius.full,
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: DesignSystem.zIndex.fixed,
+    ...DesignSystem.shadows.sm,
+  },
+  backIcon: {
+    fontSize: DesignSystem.iconSize.lg,
+    color: DesignSystem.colors.neutral[900],
   },
   scrollView: {
     flex: 1,
   },
   contentContainer: {
-    padding: 24,
+    padding: DesignSystem.spacing[6],
+    paddingTop: DesignSystem.spacing[16],
     paddingBottom: 100,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
-    marginTop: 20,
+    marginBottom: DesignSystem.spacing[8],
   },
   icon: {
-    fontSize: 64,
-    marginBottom: 16,
+    fontSize: DesignSystem.iconSize['3xl'],
+    marginBottom: DesignSystem.spacing[4],
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#000',
+    fontSize: DesignSystem.typography.fontSize['3xl'],
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    marginBottom: DesignSystem.spacing[2],
+    color: DesignSystem.colors.neutral[900],
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[600],
   },
   valueCard: {
     flexDirection: 'row',
@@ -259,18 +349,63 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     alignSelf: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
+    paddingHorizontal: DesignSystem.spacing[5],
+    paddingVertical: DesignSystem.spacing[2],
+    borderRadius: DesignSystem.radius.full,
     borderWidth: 2,
-    marginBottom: 32,
+    marginBottom: DesignSystem.spacing[6],
   },
   statusText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: DesignSystem.typography.fontSize.base,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+  },
+  presetsContainer: {
+    marginBottom: DesignSystem.spacing[6],
+  },
+  presetsLabel: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.neutral[700],
+    marginBottom: DesignSystem.spacing[3],
+  },
+  presetsRow: {
+    flexDirection: 'row',
+    gap: DesignSystem.spacing[3],
+  },
+  presetButton: {
+    flex: 1,
+    backgroundColor: DesignSystem.colors.oura.cardBackground,
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.oura.cardBorder,
+    borderRadius: DesignSystem.radius.lg,
+    padding: DesignSystem.spacing[4],
+    alignItems: 'center',
+    minHeight: DesignSystem.touchTarget.large,
+    justifyContent: 'center',
+    ...DesignSystem.shadows.sm,
+  },
+  presetButtonActive: {
+    borderColor: DesignSystem.colors.primary[500],
+    borderWidth: 2,
+    backgroundColor: DesignSystem.colors.primary[50],
+  },
+  presetButtonText: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.neutral[700],
+    marginBottom: DesignSystem.spacing[1],
+  },
+  presetButtonTextActive: {
+    color: DesignSystem.colors.primary[700],
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+  },
+  presetButtonValue: {
+    fontSize: DesignSystem.typography.fontSize.xs,
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[500],
   },
   sliderContainer: {
-    marginBottom: 32,
+    marginBottom: DesignSystem.spacing[8],
   },
   sliderLabel: {
     fontSize: 14,
