@@ -246,150 +246,8 @@ export default function DashboardScreen() {
     );
   }
 
-  // Empty state - no tests logged yet
-  if (tests.length === 0) {
-    return (
-      <View style={styles.container}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          {/* Header */}
-          <RNView style={styles.header}>
-            <RNView>
-              <Text style={styles.greeting}>{getGreeting()}</Text>
-              <Text style={styles.appName}>HormoIQ</Text>
-            </RNView>
-            <TouchableOpacity
-              style={styles.profileButton}
-              onPress={handleProfilePress}
-            >
-              <Text style={styles.profileIcon}>👤</Text>
-            </TouchableOpacity>
-          </RNView>
-
-          {/* Welcome / Empty State */}
-          <EmptyStateIllustration
-            type="no_tests"
-            title="Welcome to HormoIQ"
-            description="Start your hormone tracking journey by logging your first test. It takes less than a minute!"
-            actionLabel="Log Your First Test"
-            onActionPress={() => router.push('/test')}
-            secondaryActionLabel="How to Use Test Strips"
-            onSecondaryActionPress={() => setShowTestTutorial(true)}
-          />
-
-          {/* Preview of Features - What You'll Unlock */}
-          <RNView style={styles.section}>
-            <Text style={styles.sectionTitle}>What You'll Unlock</Text>
-            <Text style={styles.sectionSubtitle}>
-              These powerful features activate as you log tests
-            </Text>
-
-            {/* Feature Preview Cards */}
-            <RNView style={styles.featurePreviewGrid}>
-              {/* ReadyScore */}
-              <AnimatedCard delay={0} style={styles.featurePreviewCard}>
-                <Text style={styles.featurePreviewIcon}>🎯</Text>
-                <Text style={styles.featurePreviewName}>READYSCORE™</Text>
-                <Text style={styles.featurePreviewDesc}>
-                  Daily readiness score from your hormone levels
-                </Text>
-                <Text style={styles.featurePreviewUnlock}>
-                  ✓ Unlocks with 1st test
-                </Text>
-              </AnimatedCard>
-
-              {/* BioAge */}
-              <AnimatedCard delay={100} style={styles.featurePreviewCard}>
-                <Text style={styles.featurePreviewIcon}>🧬</Text>
-                <Text style={styles.featurePreviewName}>BIOAGE™</Text>
-                <Text style={styles.featurePreviewDesc}>
-                  Your hormonal age vs. calendar age
-                </Text>
-                <Text style={styles.featurePreviewUnlock}>
-                  Unlocks with 5 tests
-                </Text>
-              </AnimatedCard>
-
-              {/* Impact */}
-              <AnimatedCard delay={200} style={styles.featurePreviewCard}>
-                <Text style={styles.featurePreviewIcon}>📈</Text>
-                <Text style={styles.featurePreviewName}>IMPACT™</Text>
-                <Text style={styles.featurePreviewDesc}>
-                  See what interventions work for you
-                </Text>
-                <Text style={styles.featurePreviewUnlock}>
-                  Unlocks with 10 tests
-                </Text>
-              </AnimatedCard>
-
-              {/* ASK AI */}
-              <AnimatedCard delay={300} style={styles.featurePreviewCard}>
-                <Text style={styles.featurePreviewIcon}>🤖</Text>
-                <Text style={styles.featurePreviewName}>ASK™ AI</Text>
-                <Text style={styles.featurePreviewDesc}>
-                  Personal hormone coach powered by GPT-4
-                </Text>
-                <Text style={styles.featurePreviewUnlock}>
-                  ✓ Available now
-                </Text>
-              </AnimatedCard>
-
-              {/* Protocols */}
-              <AnimatedCard delay={400} style={styles.featurePreviewCard}>
-                <Text style={styles.featurePreviewIcon}>📋</Text>
-                <Text style={styles.featurePreviewName}>Protocols</Text>
-                <Text style={styles.featurePreviewDesc}>
-                  Evidence-based optimization plans
-                </Text>
-                <Text style={styles.featurePreviewUnlock}>
-                  ✓ Available now
-                </Text>
-              </AnimatedCard>
-
-              {/* Track */}
-              <AnimatedCard delay={500} style={styles.featurePreviewCard}>
-                <Text style={styles.featurePreviewIcon}>📊</Text>
-                <Text style={styles.featurePreviewName}>Track</Text>
-                <Text style={styles.featurePreviewDesc}>
-                  View all your test history & trends
-                </Text>
-                <Text style={styles.featurePreviewUnlock}>
-                  ✓ Available now
-                </Text>
-              </AnimatedCard>
-            </RNView>
-          </RNView>
-        </ScrollView>
-
-        {/* Feature Explainer Modal */}
-        <FeatureExplainer
-          visible={showExplainer}
-          feature={currentFeature}
-          onClose={() => setShowExplainer(false)}
-        />
-
-        {/* Guided Tour */}
-        {showTour && (
-          <GuidedTour
-            steps={defaultTourSteps}
-            onComplete={handleTourComplete}
-            onSkip={handleTourComplete}
-          />
-        )}
-
-        {/* First Test Tutorial */}
-        {showTestTutorial && (
-          <FirstTestTutorial onClose={() => setShowTestTutorial(false)} />
-        )}
-      </View>
-    );
-  }
+  // Show welcome message for users with no tests (but still show full dashboard!)
+  const hasNoTests = tests.length === 0;
 
   return (
     <View style={styles.container}>
@@ -414,6 +272,25 @@ export default function DashboardScreen() {
             <Text style={styles.profileIcon}>👤</Text>
           </TouchableOpacity>
         </RNView>
+
+        {/* Welcome Banner for New Users */}
+        {hasNoTests && (
+          <AnimatedCard delay={0} style={styles.welcomeBanner}>
+            <Text style={styles.welcomeIcon}>👋</Text>
+            <Text style={styles.welcomeTitle}>Welcome to HormoIQ!</Text>
+            <Text style={styles.welcomeText}>
+              Your test strips are on the way. While you wait, explore the features below. 
+              Everything is ready for you—just log your first test when your strips arrive!
+            </Text>
+            <TouchableOpacity
+              style={styles.welcomeButton}
+              onPress={() => router.push('/test')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.welcomeButtonText}>Preview Test Input</Text>
+            </TouchableOpacity>
+          </AnimatedCard>
+        )}
 
         {/* Swipeable Score Cards - Oura Style */}
         <SwipeableScoreCards>
@@ -932,6 +809,46 @@ const styles = StyleSheet.create({
   fabText: {
     fontSize: DesignSystem.typography.fontSize.sm,
     fontWeight: DesignSystem.typography.fontWeight.medium,
+    color: DesignSystem.colors.neutral[0],
+  },
+  // Welcome Banner Styles (for new users)
+  welcomeBanner: {
+    backgroundColor: DesignSystem.colors.primary[50],
+    borderRadius: DesignSystem.radius.xl,
+    borderWidth: 1,
+    borderColor: DesignSystem.colors.primary[100],
+    padding: DesignSystem.spacing[6],
+    marginBottom: DesignSystem.spacing[6],
+    alignItems: 'center',
+  },
+  welcomeIcon: {
+    fontSize: 48,
+    marginBottom: DesignSystem.spacing[3],
+  },
+  welcomeTitle: {
+    fontSize: DesignSystem.typography.fontSize.xl,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
+    color: DesignSystem.colors.neutral[900],
+    marginBottom: DesignSystem.spacing[2],
+    textAlign: 'center',
+  },
+  welcomeText: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.light,
+    color: DesignSystem.colors.neutral[700],
+    textAlign: 'center',
+    lineHeight: DesignSystem.typography.fontSize.sm * 1.6,
+    marginBottom: DesignSystem.spacing[4],
+  },
+  welcomeButton: {
+    backgroundColor: DesignSystem.colors.primary[500],
+    borderRadius: DesignSystem.radius.lg,
+    paddingVertical: DesignSystem.spacing[3],
+    paddingHorizontal: DesignSystem.spacing[6],
+  },
+  welcomeButtonText: {
+    fontSize: DesignSystem.typography.fontSize.sm,
+    fontWeight: DesignSystem.typography.fontWeight.semibold,
     color: DesignSystem.colors.neutral[0],
   },
   // Feature Preview Styles (for empty state)
